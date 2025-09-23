@@ -66,8 +66,8 @@ export default function Home() {
             <Banknote className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">R$ 1.832,75</div>
-            <p className="text-xs text-muted-foreground">Status: Aberto</p>
+            <div className="text-2xl font-bold">R$ 0,00</div>
+            <p className="text-xs text-muted-foreground">Status: Fechado</p>
           </CardContent>
         </Card>
       </div>

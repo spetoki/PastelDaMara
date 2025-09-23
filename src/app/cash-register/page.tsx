@@ -11,11 +11,11 @@ import { ArrowDown, ArrowUp, Briefcase, PlusCircle, MinusCircle } from 'lucide-r
 
 export default function CashRegisterPage() {
   const summary = {
-    initial: 200.0,
-    sales: 1259.5,
-    expenses: 300.0,
-    withdrawals: 150.0,
-    additions: 50.0,
+    initial: 0.0,
+    sales: 0.0,
+    expenses: 0.0,
+    withdrawals: 0.0,
+    additions: 0.0,
   };
 
   const profit = summary.sales - summary.expenses;
