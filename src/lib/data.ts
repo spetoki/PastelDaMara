@@ -1,7 +1,7 @@
 
 'use client';
 
-import type { Product, Sale, CashRegisterSummary, Combo } from './types';
+import type { Product, Sale, CashRegisterSummary, Combo, Expense } from './types';
 import { PlaceHolderImages } from './placeholder-images';
 
 const pastelCarne = PlaceHolderImages.find(p => p.id === 'pastel-carne');
@@ -84,6 +84,7 @@ function saveToStorage<T>(key: string, value: T): void {
 let mockProducts: Product[] = loadFromStorage('products', initialProducts);
 let mockCombos: Combo[] = loadFromStorage('combos', []);
 let mockSales: Sale[] = loadFromStorage('sales', []);
+let mockExpenses: Expense[] = loadFromStorage('expenses', []);
 let mockCashRegister: CashRegisterSummary = loadFromStorage('cashRegister', {
   initial: 0.0,
   sales: 0.0,
@@ -170,4 +171,25 @@ export function addCombo(combo: Omit<Combo, 'id'>) {
   const updatedCombos = [newCombo, ...combos];
   saveToStorage('combos', updatedCombos);
   return newCombo;
+}
+
+export function getExpenses() {
+  return loadFromStorage('expenses', []);
+}
+
+export function addExpense(expense: Omit<Expense, 'id' | 'date'>) {
+    const currentExpenses = getExpenses();
+    const newExpense: Expense = {
+        ...expense,
+        id: `exp-${currentExpenses.length + 1}`,
+        date: new Date().toISOString(),
+    };
+    const updatedExpenses = [newExpense, ...currentExpenses];
+    saveToStorage('expenses', updatedExpenses);
+
+    const cashRegister = loadFromStorage('cashRegister', mockCashRegister);
+    cashRegister.expenses += newExpense.amount;
+    saveToStorage('cashRegister', cashRegister);
+    
+    return newExpense;
 }

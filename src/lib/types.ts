@@ -45,6 +45,13 @@ export type Sale = {
   paymentMethod: PaymentMethod;
 };
 
+export type Expense = {
+  id: string;
+  date: string;
+  description: string;
+  amount: number;
+};
+
 export type CashRegisterSummary = {
   initial: number;
   sales: number;
