@@ -14,11 +14,6 @@ const StockTrackingAndAlertInputSchema = z.object({
   ingredientName: z.string().describe('The name of the ingredient to track.'),
   currentStockLevel: z.number().describe('The current stock level of the ingredient.'),
   stockUnit: z.enum(['g', 'kg', 'un']).describe('The unit of measurement for the stock (grams, kilograms, or units).'),
-  historicalSalesData: z
-    .string()
-    .describe(
-      'Historical sales data for products using this ingredient (e.g., daily sales for the past month), as a comma-separated list of numbers.'
-    ),
   minimumStockLevel: z
     .number()
     .describe('The minimum stock level for this ingredient before triggering an alert.'),
@@ -49,17 +44,18 @@ const trackStockAndAlertPrompt = ai.definePrompt({
   output: {schema: StockTrackingAndAlertOutputSchema},
   prompt: `You are an AI assistant helping a shop owner manage their ingredient stock levels.
 
-  Analyze the current stock level, historical sales data, and minimum stock level for the given ingredient to determine if a reorder is needed.
+  You need to predict future daily consumption based on a typical sales week for a small pastry shop. Assume higher sales on weekends (Friday, Saturday, Sunday) and lower but steady sales during the week.
+
+  Analyze the current stock level and minimum stock level for the given ingredient to determine if a reorder is needed.
 
   Ingredient: {{{ingredientName}}}
-Current Stock Level: {{{currentStockLevel}}} {{{stockUnit}}}
-Historical Sales Data (comma-separated): {{{historicalSalesData}}}
-Minimum Stock Level: {{{minimumStockLevel}}} {{{stockUnit}}}
+  Current Stock Level: {{{currentStockLevel}}} {{{stockUnit}}}
+  Minimum Stock Level: {{{minimumStockLevel}}} {{{stockUnit}}}
 
-  Based on this information, determine:
+  Based on this information and your sales prediction, determine:
   - If a reorder is needed (reorderNeeded: true/false)
   - Estimate the number of days until the ingredient is out of stock (estimatedDaysUntilOutOfStock). If reorderNeeded is false, omit this.
-  - Recommend a reorder quantity (recommendedReorderQuantity). If reorderNeeded is false, omit this.
+  - Recommend a reorder quantity (recommendedReorderQuantity). If reorderNeeded is false, omit this. The recommended quantity should be enough for at least 7-10 days of sales.
   - Explain your reasoning for the reorder recommendation (reasoning). The recommended quantity unit should match the input unit.
 
   Output in JSON format.

@@ -51,9 +51,6 @@ const formSchema = z.object({
     .number()
     .min(0, 'Estoque atual não pode ser negativo.'),
   stockUnit: z.enum(['g', 'kg', 'un']),
-  historicalSalesData: z
-    .string()
-    .min(1, 'Dados históricos são obrigatórios.'),
   minimumStockLevel: z.coerce
     .number()
     .min(0, 'Estoque mínimo não pode ser negativo.'),
@@ -71,7 +68,6 @@ export function StockManager() {
       ingredientName: '',
       currentStockLevel: 0,
       stockUnit: 'g',
-      historicalSalesData: '10,12,15,11,13,18,20',
       minimumStockLevel: 0,
     },
   });
@@ -190,22 +186,9 @@ export function StockManager() {
                       <FormControl>
                         <Input type="number" {...field} />
                       </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="historicalSalesData"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Vendas Diárias (últimos 7 dias)</FormLabel>
-                      <FormControl>
-                        <Input
-                          placeholder="Ex: 10,12,15,11,13,18,20"
-                          {...field}
-                        />
-                      </FormControl>
+                       <FormDescription>
+                        A unidade é a mesma do estoque atual.
+                       </FormDescription>
                       <FormMessage />
                     </FormItem>
                   )}
