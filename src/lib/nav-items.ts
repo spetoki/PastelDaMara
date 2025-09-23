@@ -5,7 +5,8 @@ import {
   Boxes,
   Banknote,
   type LucideIcon,
-  ShoppingCart
+  ShoppingCart,
+  Gift,
 } from 'lucide-react';
 
 export type NavItem = {
@@ -29,6 +30,11 @@ export const navItems: NavItem[] = [
     href: '/products',
     label: 'Produtos',
     icon: ShoppingBasket,
+  },
+  {
+    href: '/promotions',
+    label: 'Promoções',
+    icon: Gift,
   },
   {
     href: '/sales/history',

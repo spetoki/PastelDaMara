@@ -26,14 +26,16 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
-import { getProducts, addSale } from '@/lib/data';
-import type { Product, SaleItem, PaymentMethod } from '@/lib/types';
+import { getProducts, addSale, getCombos } from '@/lib/data';
+import type { Product, SaleItem, PaymentMethod, Combo } from '@/lib/types';
 import { Separator } from '@/components/ui/separator';
 import { useToast } from '@/hooks/use-toast';
 import { PlusCircle, MinusCircle, Trash2, ShoppingCart, CreditCard } from 'lucide-react';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 export default function NewSalePage() {
   const [products, setProducts] = useState<Product[]>([]);
+  const [combos, setCombos] = useState<Combo[]>([]);
   const [cart, setCart] = useState<SaleItem[]>([]);
   const [isCheckoutOpen, setCheckoutOpen] = useState(false);
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('Dinheiro');
@@ -41,28 +43,29 @@ export default function NewSalePage() {
 
   useEffect(() => {
     setProducts(getProducts());
+    setCombos(getCombos());
   }, []);
 
-  const handleAddToCart = (product: Product) => {
+  const handleAddToCart = (item: Product | Combo) => {
     setCart((prevCart) => {
-      const existingItem = prevCart.find((item) => item.product.id === product.id);
+      const existingItem = prevCart.find((cartItem) => cartItem.product.id === item.id);
       if (existingItem) {
-        return prevCart.map((item) =>
-          item.product.id === product.id ? { ...item, quantity: item.quantity + 1 } : item
+        return prevCart.map((cartItem) =>
+          cartItem.product.id === item.id ? { ...cartItem, quantity: cartItem.quantity + 1 } : cartItem
         );
       }
-      return [...prevCart, { product, quantity: 1 }];
+      return [...prevCart, { product: item, quantity: 1 }];
     });
   };
 
-  const updateQuantity = (productId: string, newQuantity: number) => {
+  const updateQuantity = (itemId: string, newQuantity: number) => {
     if (newQuantity <= 0) {
       // Remove item if quantity is 0 or less
-      setCart((prevCart) => prevCart.filter((item) => item.product.id !== productId));
+      setCart((prevCart) => prevCart.filter((item) => item.product.id !== itemId));
     } else {
       setCart((prevCart) =>
         prevCart.map((item) =>
-          item.product.id === productId ? { ...item, quantity: newQuantity } : item
+          item.product.id === itemId ? { ...item, quantity: newQuantity } : item
         )
       );
     }
@@ -97,40 +100,82 @@ export default function NewSalePage() {
 
   return (
     <div className="grid md:grid-cols-3 gap-6 items-start">
-      {/* Product List */}
+      {/* Product and Combo List */}
       <div className="md:col-span-2">
         <h1 className="text-2xl font-bold tracking-tight md:text-3xl mb-4">
           Ponto de Venda
         </h1>
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
-          {products.map((product) => (
-            <Card
-              key={product.id}
-              className="cursor-pointer hover:border-primary overflow-hidden flex flex-col"
-              onClick={() => handleAddToCart(product)}
-            >
-              <CardContent className="p-0">
-                <Image
-                  alt={product.name}
-                  className="aspect-square w-full object-cover"
-                  height="150"
-                  src={product.imageUrl}
-                  width="150"
-                  data-ai-hint={product.imageHint}
-                />
-              </CardContent>
-              <CardFooter className="p-3 flex flex-col items-start flex-grow justify-end">
-                <p className="font-semibold text-sm truncate w-full">{product.name}</p>
-                <p className="text-sm text-muted-foreground">
-                  {product.price.toLocaleString('pt-BR', {
-                    style: 'currency',
-                    currency: 'BRL',
-                  })}
-                </p>
-              </CardFooter>
-            </Card>
-          ))}
-        </div>
+        <Tabs defaultValue="products">
+          <TabsList className="mb-4">
+            <TabsTrigger value="products">Produtos</TabsTrigger>
+            <TabsTrigger value="combos">Combos</TabsTrigger>
+          </TabsList>
+          <TabsContent value="products">
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+              {products.map((product) => (
+                <Card
+                  key={product.id}
+                  className="cursor-pointer hover:border-primary overflow-hidden flex flex-col"
+                  onClick={() => handleAddToCart(product)}
+                >
+                  <CardContent className="p-0">
+                    <Image
+                      alt={product.name}
+                      className="aspect-square w-full object-cover"
+                      height="150"
+                      src={product.imageUrl}
+                      width="150"
+                      data-ai-hint={product.imageHint}
+                    />
+                  </CardContent>
+                  <CardFooter className="p-3 flex flex-col items-start flex-grow justify-end">
+                    <p className="font-semibold text-sm truncate w-full">{product.name}</p>
+                    <p className="text-sm text-muted-foreground">
+                      {product.price.toLocaleString('pt-BR', {
+                        style: 'currency',
+                        currency: 'BRL',
+                      })}
+                    </p>
+                  </CardFooter>
+                </Card>
+              ))}
+            </div>
+          </TabsContent>
+          <TabsContent value="combos">
+             <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+              {combos.length > 0 ? combos.map((combo) => (
+                <Card
+                  key={combo.id}
+                  className="cursor-pointer hover:border-primary overflow-hidden flex flex-col"
+                  onClick={() => handleAddToCart(combo)}
+                >
+                  <CardContent className="p-0">
+                    <Image
+                      alt={combo.name}
+                      className="aspect-square w-full object-cover"
+                      height="150"
+                      src={combo.imageUrl}
+                      width="150"
+                      data-ai-hint={combo.imageHint}
+                    />
+                  </CardContent>
+                  <CardFooter className="p-3 flex flex-col items-start flex-grow justify-end">
+                    <p className="font-semibold text-sm truncate w-full">{combo.name}</p>
+                    <p className="text-sm text-muted-foreground">
+                      {combo.price.toLocaleString('pt-BR', {
+                        style: 'currency',
+                        currency: 'BRL',
+                      })}
+                    </p>
+                  </CardFooter>
+                </Card>
+              )) : (
+                <p className="text-muted-foreground col-span-full">Nenhum combo criado ainda.</p>
+              )}
+            </div>
+          </TabsContent>
+        </Tabs>
+
       </div>
 
       {/* Cart */}

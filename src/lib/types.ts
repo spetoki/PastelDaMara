@@ -15,6 +15,15 @@ export type Product = {
   imageHint: string;
 };
 
+export type Combo = {
+  id: string;
+  name: string;
+  products: Product[];
+  price: number;
+  imageUrl: string;
+  imageHint: string;
+};
+
 export type StockItem = {
   id: string;
   name: string;
@@ -24,7 +33,7 @@ export type StockItem = {
 };
 
 export type SaleItem = {
-  product: Product;
+  product: Product | Combo;
   quantity: number;
 };
 

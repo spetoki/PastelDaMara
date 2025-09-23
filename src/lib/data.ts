@@ -1,4 +1,4 @@
-import type { Product, Sale, StockItem, CashRegisterSummary } from './types';
+import type { Product, Sale, StockItem, CashRegisterSummary, Combo } from './types';
 import { PlaceHolderImages } from './placeholder-images';
 
 const pastelCarne = PlaceHolderImages.find(p => p.id === 'pastel-carne');
@@ -45,6 +45,7 @@ export let mockProducts: Product[] = [
     }
 ];
 
+export let mockCombos: Combo[] = [];
 export let mockSales: Sale[] = [];
 
 export let mockCashRegister: CashRegisterSummary = {
@@ -62,6 +63,25 @@ export function addSale(sale: Omit<Sale, 'id' | 'date'>) {
     id: (mockSales.length + 1).toString(),
     date: new Date().toISOString(),
   };
+
+  // Decrement stock for each item sold
+  newSale.items.forEach(item => {
+    if ('products' in item.product) { // It's a combo
+      item.product.products.forEach(p => {
+        const productIndex = mockProducts.findIndex(mp => mp.id === p.id);
+        if (productIndex !== -1) {
+          mockProducts[productIndex].stock -= item.quantity;
+        }
+      });
+    } else { // It's a single product
+      const productIndex = mockProducts.findIndex(mp => mp.id === item.product.id);
+      if (productIndex !== -1) {
+          mockProducts[productIndex].stock -= item.quantity;
+      }
+    }
+  });
+
+
   mockSales.push(newSale);
   mockCashRegister.sales += newSale.total;
   return newSale;
@@ -86,4 +106,17 @@ export function updateProduct(updatedProduct: Product) {
     p.id === updatedProduct.id ? updatedProduct : p
   );
   return updatedProduct;
+}
+
+export function getCombos() {
+  return mockCombos;
+}
+
+export function addCombo(combo: Omit<Combo, 'id'>) {
+  const newCombo: Combo = {
+    ...combo,
+    id: `combo-${mockCombos.length + 1}`,
+  };
+  mockCombos = [newCombo, ...mockCombos];
+  return newCombo;
 }
