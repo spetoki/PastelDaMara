@@ -58,34 +58,56 @@ const productSchema = z.object({
   cost: z.coerce.number().positive('Custo deve ser positivo'),
   stock: z.coerce.number().int().min(0, 'Estoque não pode ser negativo'),
   stockUnit: z.enum(['g', 'un']),
+  imageUrl: z.string().url('URL da imagem inválida').optional().or(z.literal('')),
 });
 
 export function ProductClient() {
   const [products, setProducts] = useState<Product[]>(mockProducts);
   const [open, setOpen] = useState(false);
+  const [editingProduct, setEditingProduct] = useState<Product | null>(null);
 
   const form = useForm<z.infer<typeof productSchema>>({
     resolver: zodResolver(productSchema),
-    defaultValues: {
-      name: '',
-      category: 'Pastéis',
-      price: 0,
-      cost: 0,
-      stock: 0,
-      stockUnit: 'un',
-    },
   });
 
+  function handleOpenDialog(product: Product | null) {
+    setEditingProduct(product);
+    if (product) {
+      form.reset(product);
+    } else {
+      form.reset({
+        name: '',
+        category: 'Pastéis',
+        price: 0,
+        cost: 0,
+        stock: 0,
+        stockUnit: 'un',
+        imageUrl: '',
+      });
+    }
+    setOpen(true);
+  }
+
   function onSubmit(values: z.infer<typeof productSchema>) {
-    const newProduct: Product = {
-      id: (products.length + 1).toString(),
-      ...values,
-      imageUrl: 'https://picsum.photos/seed/newitem/200/200',
-      imageHint: 'new item',
-    };
-    setProducts([newProduct, ...products]);
+    if (editingProduct) {
+      // Edit existing product
+      const updatedProducts = products.map((p) =>
+        p.id === editingProduct.id ? { ...p, ...values, imageUrl: values.imageUrl || p.imageUrl } : p
+      );
+      setProducts(updatedProducts);
+    } else {
+      // Add new product
+      const newProduct: Product = {
+        id: (products.length + 1).toString(),
+        ...values,
+        imageUrl: values.imageUrl || `https://picsum.photos/seed/${values.name}/200/200`,
+        imageHint: 'new item',
+      };
+      setProducts([newProduct, ...products]);
+    }
     form.reset();
     setOpen(false);
+    setEditingProduct(null);
   }
 
   return (
@@ -93,16 +115,16 @@ export function ProductClient() {
       <div className="flex justify-end">
         <Dialog open={open} onOpenChange={setOpen}>
           <DialogTrigger asChild>
-            <Button>
+            <Button onClick={() => handleOpenDialog(null)}>
               <PlusCircle className="mr-2 h-4 w-4" />
               Adicionar Produto
             </Button>
           </DialogTrigger>
           <DialogContent className="sm:max-w-[425px]">
             <DialogHeader>
-              <DialogTitle>Adicionar Novo Produto</DialogTitle>
+              <DialogTitle>{editingProduct ? 'Editar Produto' : 'Adicionar Novo Produto'}</DialogTitle>
               <DialogDescription>
-                Preencha os detalhes do novo produto.
+                {editingProduct ? 'Atualize os detalhes do produto.' : 'Preencha os detalhes do novo produto.'}
               </DialogDescription>
             </DialogHeader>
             <Form {...form}>
@@ -118,6 +140,19 @@ export function ProductClient() {
                       <FormLabel>Nome do Produto</FormLabel>
                       <FormControl>
                         <Input placeholder="Pastel de Carne" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                 <FormField
+                  control={form.control}
+                  name="imageUrl"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>URL da Imagem</FormLabel>
+                      <FormControl>
+                        <Input placeholder="https://..." {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -271,7 +306,7 @@ export function ProductClient() {
                       </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end">
-                      <DropdownMenuItem>Editar</DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => handleOpenDialog(product)}>Editar</DropdownMenuItem>
                       <DropdownMenuItem className="text-destructive">
                         Deletar
                       </DropdownMenuItem>
