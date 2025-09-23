@@ -6,6 +6,8 @@ import {
   Card,
   CardContent,
   CardFooter,
+  CardHeader,
+  CardTitle,
 } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import {
@@ -14,6 +16,7 @@ import {
   DialogHeader,
   DialogTitle,
   DialogFooter,
+  DialogDescription,
 } from '@/components/ui/dialog';
 import {
   Select,
@@ -22,151 +25,209 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { mockProducts, addSale } from '@/lib/data';
-import type { Product, PaymentMethod } from '@/lib/types';
-import { CreditCard } from 'lucide-react';
+import type { Product, SaleItem, PaymentMethod } from '@/lib/types';
+import { Separator } from '@/components/ui/separator';
 import { useToast } from '@/hooks/use-toast';
+import { PlusCircle, MinusCircle, Trash2, ShoppingCart, CreditCard } from 'lucide-react';
 
 export default function NewSalePage() {
   const [products] = useState<Product[]>(mockProducts);
-  const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
-  const [quantity, setQuantity] = useState(1);
+  const [cart, setCart] = useState<SaleItem[]>([]);
+  const [isCheckoutOpen, setCheckoutOpen] = useState(false);
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('Dinheiro');
   const { toast } = useToast();
 
-  const handleProductClick = (product: Product) => {
-    setSelectedProduct(product);
-    setQuantity(1);
-    setPaymentMethod('Dinheiro');
+  const handleAddToCart = (product: Product) => {
+    setCart((prevCart) => {
+      const existingItem = prevCart.find((item) => item.product.id === product.id);
+      if (existingItem) {
+        return prevCart.map((item) =>
+          item.product.id === product.id ? { ...item, quantity: item.quantity + 1 } : item
+        );
+      }
+      return [...prevCart, { product, quantity: 1 }];
+    });
   };
 
-  const handleCloseDialog = () => {
-    setSelectedProduct(null);
+  const updateQuantity = (productId: string, newQuantity: number) => {
+    if (newQuantity <= 0) {
+      // Remove item if quantity is 0 or less
+      setCart((prevCart) => prevCart.filter((item) => item.product.id !== productId));
+    } else {
+      setCart((prevCart) =>
+        prevCart.map((item) =>
+          item.product.id === productId ? { ...item, quantity: newQuantity } : item
+        )
+      );
+    }
   };
+
+  const cartTotal = cart.reduce((total, item) => total + item.product.price * item.quantity, 0);
 
   const handleFinalizeSale = () => {
-    if (!selectedProduct || quantity <= 0) {
+    if (cart.length === 0) {
       toast({
         variant: 'destructive',
-        title: 'Venda inválida',
-        description: 'Selecione um produto e uma quantidade válida.',
+        title: 'Carrinho vazio',
+        description: 'Adicione produtos ao carrinho para finalizar a venda.',
       });
       return;
     }
 
-    const saleTotal = selectedProduct.price * quantity;
-
     addSale({
-      items: [{ product: selectedProduct, quantity }],
-      total: saleTotal,
+      items: cart,
+      total: cartTotal,
       paymentMethod,
     });
 
     toast({
       title: 'Venda Finalizada com Sucesso!',
-      description: `Total: ${saleTotal.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}`,
+      description: `Total: ${cartTotal.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}`,
     });
 
-    handleCloseDialog();
+    setCart([]);
+    setCheckoutOpen(false);
   };
 
   return (
-    <div className="space-y-6">
-      <h1 className="text-2xl font-bold tracking-tight md:text-3xl">
-        Ponto de Venda
-      </h1>
-      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
-        {products.map((product) => (
-          <Card
-            key={product.id}
-            className="cursor-pointer hover:border-primary overflow-hidden"
-            onClick={() => handleProductClick(product)}
-          >
-            <CardContent className="p-0">
-              <Image
-                alt={product.name}
-                className="aspect-square w-full object-cover"
-                height="150"
-                src={product.imageUrl}
-                width="150"
-                data-ai-hint={product.imageHint}
-              />
-            </CardContent>
-            <CardFooter className="p-3 flex flex-col items-start">
-              <p className="font-semibold text-sm truncate w-full">{product.name}</p>
-              <p className="text-sm text-muted-foreground">
-                {product.price.toLocaleString('pt-BR', {
-                  style: 'currency',
-                  currency: 'BRL',
-                })}
-              </p>
-            </CardFooter>
-          </Card>
-        ))}
+    <div className="grid md:grid-cols-3 gap-6 items-start">
+      {/* Product List */}
+      <div className="md:col-span-2">
+        <h1 className="text-2xl font-bold tracking-tight md:text-3xl mb-4">
+          Ponto de Venda
+        </h1>
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+          {products.map((product) => (
+            <Card
+              key={product.id}
+              className="cursor-pointer hover:border-primary overflow-hidden flex flex-col"
+              onClick={() => handleAddToCart(product)}
+            >
+              <CardContent className="p-0">
+                <Image
+                  alt={product.name}
+                  className="aspect-square w-full object-cover"
+                  height="150"
+                  src={product.imageUrl}
+                  width="150"
+                  data-ai-hint={product.imageHint}
+                />
+              </CardContent>
+              <CardFooter className="p-3 flex flex-col items-start flex-grow justify-end">
+                <p className="font-semibold text-sm truncate w-full">{product.name}</p>
+                <p className="text-sm text-muted-foreground">
+                  {product.price.toLocaleString('pt-BR', {
+                    style: 'currency',
+                    currency: 'BRL',
+                  })}
+                </p>
+              </CardFooter>
+            </Card>
+          ))}
+        </div>
       </div>
 
-      <Dialog open={!!selectedProduct} onOpenChange={handleCloseDialog}>
-        <DialogContent className="sm:max-w-[425px]">
-          <DialogHeader>
-            <DialogTitle>Finalizar Venda</DialogTitle>
-          </DialogHeader>
-          {selectedProduct && (
-            <div className="space-y-4 py-4">
-               <div className="flex items-center gap-4">
-                <Image
-                    alt={selectedProduct.name}
-                    className="aspect-square rounded-md object-cover"
-                    height="80"
-                    src={selectedProduct.imageUrl}
-                    width="80"
+      {/* Cart */}
+      <Card className="sticky top-20">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <ShoppingCart />
+            Carrinho
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          {cart.length === 0 ? (
+            <p className="text-muted-foreground text-center">O carrinho está vazio.</p>
+          ) : (
+            <div className="space-y-3 max-h-96 overflow-y-auto pr-2">
+              {cart.map((item) => (
+                <div key={item.product.id} className="flex items-center gap-3">
+                  <Image
+                    src={item.product.imageUrl}
+                    alt={item.product.name}
+                    width={48}
+                    height={48}
+                    className="rounded-md object-cover"
                   />
-                  <div>
-                    <h3 className="text-lg font-semibold">{selectedProduct.name}</h3>
-                    <p className="text-muted-foreground">
-                      {selectedProduct.price.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+                  <div className="flex-grow">
+                    <p className="font-medium text-sm">{item.product.name}</p>
+                    <p className="text-xs text-muted-foreground">
+                      {item.product.price.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
                     </p>
                   </div>
-              </div>
-
-              <div className="grid grid-cols-2 items-end gap-4">
-                 <div>
-                    <Label htmlFor="quantity">Quantidade</Label>
-                    <Input 
-                      id="quantity" 
-                      type="number" 
-                      value={quantity} 
-                      onChange={(e) => setQuantity(Math.max(1, parseInt(e.target.value) || 1))}
-                      min="1"
-                      className="text-base"
-                    />
-                 </div>
-                 <p className="text-right text-lg font-bold">
-                    Total: {(selectedProduct.price * quantity).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
-                  </p>
-              </div>
-
-              <div className="space-y-2">
-                 <Label htmlFor="paymentMethod">Forma de Pagamento</Label>
-                 <Select onValueChange={(value) => setPaymentMethod(value as PaymentMethod)} defaultValue={paymentMethod}>
-                    <SelectTrigger id="paymentMethod">
-                      <SelectValue placeholder="Selecione" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="Dinheiro">Dinheiro</SelectItem>
-                      <SelectItem value="Pix">Pix</SelectItem>
-                      <SelectItem value="Cartão">Cartão</SelectItem>
-                    </SelectContent>
-                  </Select>
-               </div>
+                  <div className="flex items-center gap-2">
+                    <Button size="icon" variant="ghost" className="h-6 w-6" onClick={() => updateQuantity(item.product.id, item.quantity - 1)}>
+                      <MinusCircle className="h-4 w-4" />
+                    </Button>
+                    <span className="font-bold w-4 text-center">{item.quantity}</span>
+                     <Button size="icon" variant="ghost" className="h-6 w-6" onClick={() => updateQuantity(item.product.id, item.quantity + 1)}>
+                      <PlusCircle className="h-4 w-4" />
+                    </Button>
+                  </div>
+                  <Button size="icon" variant="ghost" className="h-7 w-7 text-destructive/80" onClick={() => updateQuantity(item.product.id, 0)}>
+                     <Trash2 className="h-4 w-4" />
+                  </Button>
+                </div>
+              ))}
             </div>
           )}
-          <DialogFooter>
-            <Button variant="outline" onClick={handleCloseDialog}>Cancelar</Button>
-            <Button className="w-full" size="lg" onClick={handleFinalizeSale}>
-              <CreditCard className="mr-2 h-5 w-5" />
-              Finalizar Venda
+          <Separator />
+          <div className="flex justify-between items-center text-lg font-bold">
+            <span>Total:</span>
+            <span>{cartTotal.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</span>
+          </div>
+        </CardContent>
+        <CardFooter>
+           <Button className="w-full" size="lg" disabled={cart.length === 0} onClick={() => setCheckoutOpen(true)}>
+             <CreditCard className="mr-2 h-5 w-5" />
+             Finalizar Venda
+           </Button>
+        </CardFooter>
+      </Card>
+
+      {/* Checkout Dialog */}
+      <Dialog open={isCheckoutOpen} onOpenChange={setCheckoutOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Confirmar Venda</DialogTitle>
+            <DialogDescription>
+              Revise os itens e selecione a forma de pagamento.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="py-4 space-y-4">
+             <div className="space-y-2 max-h-60 overflow-y-auto pr-2">
+                {cart.map(item => (
+                  <div key={item.product.id} className="flex justify-between items-center">
+                    <span>{item.quantity}x {item.product.name}</span>
+                    <span className="font-medium">{(item.quantity * item.product.price).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</span>
+                  </div>
+                ))}
+             </div>
+             <Separator />
+             <div className="flex justify-between text-xl font-bold">
+                <span>Total</span>
+                <span>{cartTotal.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</span>
+             </div>
+             <div className="space-y-2">
+               <Label htmlFor="paymentMethod">Forma de Pagamento</Label>
+               <Select onValueChange={(value) => setPaymentMethod(value as PaymentMethod)} defaultValue={paymentMethod}>
+                  <SelectTrigger id="paymentMethod">
+                    <SelectValue placeholder="Selecione" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Dinheiro">Dinheiro</SelectItem>
+                    <SelectItem value="Pix">Pix</SelectItem>
+                    <SelectItem value="Cartão">Cartão</SelectItem>
+                  </SelectContent>
+                </Select>
+             </div>
+          </div>
+          <DialogFooter className="sm:justify-between gap-2">
+            <Button variant="outline" onClick={() => setCheckoutOpen(false)}>Cancelar</Button>
+            <Button className="w-full" onClick={handleFinalizeSale}>
+              Confirmar e Pagar
             </Button>
           </DialogFooter>
         </DialogContent>
