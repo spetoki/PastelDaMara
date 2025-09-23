@@ -42,9 +42,24 @@ export default function NewSalePage() {
   const { toast } = useToast();
 
   useEffect(() => {
+    // Load products and combos on component mount
     setProducts(getProducts());
     setCombos(getCombos());
-  }, []);
+
+    // Periodically check for updates to products, in case they are edited in another tab
+    const interval = setInterval(() => {
+        const updatedProducts = getProducts();
+        const updatedCombos = getCombos();
+        if (JSON.stringify(updatedProducts) !== JSON.stringify(products)) {
+            setProducts(updatedProducts);
+        }
+        if (JSON.stringify(updatedCombos) !== JSON.stringify(combos)) {
+            setCombos(updatedCombos);
+        }
+    }, 1000); // Check every second
+
+    return () => clearInterval(interval);
+  }, [products, combos]);
 
   const handleAddToCart = (item: Product | Combo) => {
     setCart((prevCart) => {

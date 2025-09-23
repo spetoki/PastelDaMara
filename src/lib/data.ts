@@ -1,12 +1,14 @@
-import type { Product, Sale, StockItem, CashRegisterSummary, Combo } from './types';
+
+'use client';
+
+import type { Product, Sale, CashRegisterSummary, Combo } from './types';
 import { PlaceHolderImages } from './placeholder-images';
 
 const pastelCarne = PlaceHolderImages.find(p => p.id === 'pastel-carne');
 const pastelQueijo = PlaceHolderImages.find(p => p.id === 'pastel-queijo');
 const cocaCola = PlaceHolderImages.find(p => p.id === 'coca-cola');
 
-
-export let mockProducts: Product[] = [
+const initialProducts: Product[] = [
     {
         id: '1',
         name: 'Pastel de Carne',
@@ -45,78 +47,121 @@ export let mockProducts: Product[] = [
     }
 ];
 
-export let mockCombos: Combo[] = [];
-export let mockSales: Sale[] = [];
+// --- LocalStorage Logic ---
+function loadFromStorage<T>(key: string, defaultValue: T): T {
+  if (typeof window === 'undefined') {
+    return defaultValue;
+  }
+  try {
+    const item = window.localStorage.getItem(key);
+    return item ? JSON.parse(item) : defaultValue;
+  } catch (error) {
+    console.warn(`Error reading localStorage key “${key}”:`, error);
+    return defaultValue;
+  }
+}
 
-export let mockCashRegister: CashRegisterSummary = {
+function saveToStorage<T>(key: string, value: T): void {
+  if (typeof window === 'undefined') {
+    console.warn('Cannot save to localStorage: window is not defined.');
+    return;
+  }
+  try {
+    window.localStorage.setItem(key, JSON.stringify(value));
+  } catch (error) {
+    console.warn(`Error writing to localStorage key “${key}”:`, error);
+  }
+}
+
+
+// Initialize data from localStorage or with initial values
+let mockProducts: Product[] = loadFromStorage('products', initialProducts);
+let mockCombos: Combo[] = loadFromStorage('combos', []);
+let mockSales: Sale[] = loadFromStorage('sales', []);
+let mockCashRegister: CashRegisterSummary = loadFromStorage('cashRegister', {
   initial: 0.0,
   sales: 0.0,
   expenses: 0.0,
   withdrawals: 0.0,
   additions: 0.0,
-};
+});
 
 // Funções para manipular os dados mockados
 export function addSale(sale: Omit<Sale, 'id' | 'date'>) {
+  const currentSales = getSales();
   const newSale: Sale = {
     ...sale,
-    id: (mockSales.length + 1).toString(),
+    id: (currentSales.length + 1).toString(),
     date: new Date().toISOString(),
   };
 
   // Decrement stock for each item sold
+  let currentProducts = getProducts();
   newSale.items.forEach(item => {
-    if ('products' in item.product) { // It's a combo
-      item.product.products.forEach(p => {
-        const productIndex = mockProducts.findIndex(mp => mp.id === p.id);
+    const productsToUpdate = 'products' in item.product ? item.product.products : [item.product];
+    productsToUpdate.forEach(p => {
+       const productIndex = currentProducts.findIndex(mp => mp.id === p.id);
         if (productIndex !== -1) {
-          mockProducts[productIndex].stock -= item.quantity;
+          currentProducts[productIndex].stock -= item.quantity;
         }
-      });
-    } else { // It's a single product
-      const productIndex = mockProducts.findIndex(mp => mp.id === item.product.id);
-      if (productIndex !== -1) {
-          mockProducts[productIndex].stock -= item.quantity;
-      }
-    }
+    });
   });
+  saveToStorage('products', currentProducts);
+  mockProducts = currentProducts;
 
 
-  mockSales.push(newSale);
+  mockSales = [newSale, ...currentSales];
+  saveToStorage('sales', mockSales);
+  
   mockCashRegister.sales += newSale.total;
+  saveToStorage('cashRegister', mockCashRegister);
+
   return newSale;
 }
 
 
 export function getProducts() {
-  return mockProducts;
+  return loadFromStorage('products', initialProducts);
+}
+
+export function getSales() {
+  return loadFromStorage('sales', []);
 }
 
 export function addProduct(product: Omit<Product, 'id'>) {
+  const products = getProducts();
   const newProduct: Product = {
     ...product,
-    id: (mockProducts.length + 1).toString(),
+    id: (products.length > 0 ? Math.max(...products.map(p => parseInt(p.id, 10))) + 1 : 1).toString(),
   };
-  mockProducts = [newProduct, ...mockProducts];
+  mockProducts = [newProduct, ...products];
+  saveToStorage('products', mockProducts);
   return newProduct;
 }
 
 export function updateProduct(updatedProduct: Product) {
-  mockProducts = mockProducts.map((p) =>
+  const products = getProducts();
+  mockProducts = products.map((p) =>
     p.id === updatedProduct.id ? updatedProduct : p
   );
+  saveToStorage('products', mockProducts);
   return updatedProduct;
 }
 
 export function getCombos() {
-  return mockCombos;
+  return loadFromStorage('combos', []);
 }
 
 export function addCombo(combo: Omit<Combo, 'id'>) {
+  const combos = getCombos();
   const newCombo: Combo = {
     ...combo,
-    id: `combo-${mockCombos.length + 1}`,
+    id: `combo-${combos.length + 1}`,
   };
-  mockCombos = [newCombo, ...mockCombos];
+  mockCombos = [newCombo, ...combos];
+  saveToStorage('combos', mockCombos);
   return newCombo;
 }
+
+// Ensure mockCashRegister is accessible for pages that need it.
+export { mockCashRegister };

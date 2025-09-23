@@ -13,21 +13,36 @@ import { Separator } from '@/components/ui/separator';
 import { mockCashRegister } from '@/lib/data';
 import type { CashRegisterSummary } from '@/lib/types';
 import { Briefcase, PlusCircle, MinusCircle } from 'lucide-react';
+import { getSales } from '@/lib/data';
+
+
+function loadCashRegisterFromStorage(): CashRegisterSummary {
+  if (typeof window === 'undefined') {
+    return { initial: 0, sales: 0, expenses: 0, withdrawals: 0, additions: 0 };
+  }
+  const saved = window.localStorage.getItem('cashRegister');
+  const initialValue = saved ? JSON.parse(saved) : { initial: 0, sales: 0, expenses: 0, withdrawals: 0, additions: 0 };
+  
+  // Recalculate sales from sales history
+  const sales = getSales();
+  initialValue.sales = sales.reduce((acc, sale) => acc + sale.total, 0);
+  
+  return initialValue;
+}
 
 export default function CashRegisterPage() {
-  const [summary, setSummary] = useState<CashRegisterSummary>(mockCashRegister);
+  const [summary, setSummary] = useState<CashRegisterSummary>(loadCashRegisterFromStorage());
 
-  // This will re-render the component when sales data changes.
-  // A more robust solution might involve a state management library.
   useEffect(() => {
     const interval = setInterval(() => {
-      if (mockCashRegister.sales !== summary.sales) {
-        setSummary({ ...mockCashRegister });
+      const updatedSummary = loadCashRegisterFromStorage();
+      if (JSON.stringify(updatedSummary) !== JSON.stringify(summary)) {
+        setSummary(updatedSummary);
       }
-    }, 1000); // Check for updates every second
+    }, 500); // Check for updates every 500ms
 
     return () => clearInterval(interval);
-  }, [summary.sales]);
+  }, [summary]);
 
   const profit = summary.sales - summary.expenses;
   const currentBalance =

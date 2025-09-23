@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { mockSales } from '@/lib/data';
+import { getSales } from '@/lib/data';
 import type { Sale } from '@/lib/types';
 import {
   Card,
@@ -23,20 +23,23 @@ import { Badge } from '@/components/ui/badge';
 import Image from 'next/image';
 
 export default function SalesHistoryPage() {
-  const [sales, setSales] = useState<Sale[]>(mockSales);
+  const [sales, setSales] = useState<Sale[]>(getSales());
+  const [lastSalesCount, setLastSalesCount] = useState(sales.length);
 
   // This is a simple way to force a re-render if the underlying data changes.
   // In a real-world app, you might use a state management library or context.
   useEffect(() => {
     const interval = setInterval(() => {
+      const currentSales = getSales();
       // A simple check to see if the length has changed.
-      if (mockSales.length !== sales.length) {
-        setSales([...mockSales]);
+      if (currentSales.length !== lastSalesCount) {
+        setSales(currentSales);
+        setLastSalesCount(currentSales.length);
       }
     }, 500); // Check every half a second
 
     return () => clearInterval(interval);
-  }, [sales.length]);
+  }, [lastSalesCount]);
 
 
   return (
