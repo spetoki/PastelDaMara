@@ -1,0 +1,36 @@
+export type ProductCategory = 'Pastéis' | 'Bebidas' | 'Outros';
+export type StockUnit = 'g' | 'kg' | 'ml' | 'l' | 'un';
+export type PaymentMethod = 'Dinheiro' | 'Pix' | 'Cartão';
+
+export type Product = {
+  id: string;
+  name: string;
+  category: ProductCategory;
+  price: number;
+  cost: number;
+  stock: number;
+  stockUnit: 'g' | 'un';
+  imageUrl: string;
+  imageHint: string;
+};
+
+export type StockItem = {
+  id: string;
+  name: string;
+  stock: number;
+  unit: StockUnit;
+  minStock: number;
+};
+
+export type SaleItem = {
+  product: Product;
+  quantity: number;
+};
+
+export type Sale = {
+  id: string;
+  date: string;
+  items: SaleItem[];
+  total: number;
+  paymentMethod: PaymentMethod;
+};
