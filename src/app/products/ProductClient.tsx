@@ -117,7 +117,7 @@ export function ProductClient() {
         id: (products.length + 1).toString(),
         ...values,
         imageUrl: values.imageUrl || `https://picsum.photos/seed/${values.name}/200/200`,
-        imageHint: 'new item',
+        imageHint: 'novo item',
       };
       setProducts([newProduct, ...products]);
     }

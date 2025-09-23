@@ -80,7 +80,7 @@ function SalesList() {
                 </TableCell>
                 <TableCell className="hidden sm:table-cell">
                   <Badge className="text-xs" variant="secondary">
-                    Fulfilled
+                    Concluído
                   </Badge>
                 </TableCell>
                 <TableCell className="hidden md:table-cell">
