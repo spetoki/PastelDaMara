@@ -5,11 +5,10 @@ export default function StockPage() {
     <div className="space-y-6">
       <div>
         <h1 className="text-2xl font-bold tracking-tight md:text-3xl">
-          Controle de Estoque Inteligente
+          Controle de Estoque
         </h1>
         <p className="text-muted-foreground">
-          Use nossa IA para prever necessidades de estoque e gerenciar seus
-          ingredientes.
+          Gerencie os ingredientes e itens em estoque.
         </p>
       </div>
       <StockManager />
