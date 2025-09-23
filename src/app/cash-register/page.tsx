@@ -1,3 +1,6 @@
+'use client';
+
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import {
   Card,
@@ -8,10 +11,23 @@ import {
 } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import { mockCashRegister } from '@/lib/data';
+import type { CashRegisterSummary } from '@/lib/types';
 import { Briefcase, PlusCircle, MinusCircle } from 'lucide-react';
 
 export default function CashRegisterPage() {
-  const summary = mockCashRegister;
+  const [summary, setSummary] = useState<CashRegisterSummary>(mockCashRegister);
+
+  // This will re-render the component when sales data changes.
+  // A more robust solution might involve a state management library.
+  useEffect(() => {
+    const interval = setInterval(() => {
+      if (mockCashRegister.sales !== summary.sales) {
+        setSummary({ ...mockCashRegister });
+      }
+    }, 1000); // Check for updates every second
+
+    return () => clearInterval(interval);
+  }, [summary.sales]);
 
   const profit = summary.sales - summary.expenses;
   const currentBalance =
