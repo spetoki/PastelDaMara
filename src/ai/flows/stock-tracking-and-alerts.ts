@@ -12,7 +12,8 @@ import {z} from 'genkit';
 
 const StockTrackingAndAlertInputSchema = z.object({
   ingredientName: z.string().describe('The name of the ingredient to track.'),
-  currentStockLevel: z.number().describe('The current stock level of the ingredient (in grams/units).'),
+  currentStockLevel: z.number().describe('The current stock level of the ingredient.'),
+  stockUnit: z.enum(['g', 'kg', 'un']).describe('The unit of measurement for the stock (grams, kilograms, or units).'),
   historicalSalesData: z
     .string()
     .describe(
@@ -51,15 +52,15 @@ const trackStockAndAlertPrompt = ai.definePrompt({
   Analyze the current stock level, historical sales data, and minimum stock level for the given ingredient to determine if a reorder is needed.
 
   Ingredient: {{{ingredientName}}}
-Current Stock Level: {{{currentStockLevel}}}
+Current Stock Level: {{{currentStockLevel}}} {{{stockUnit}}}
 Historical Sales Data (comma-separated): {{{historicalSalesData}}}
-Minimum Stock Level: {{{minimumStockLevel}}}
+Minimum Stock Level: {{{minimumStockLevel}}} {{{stockUnit}}}
 
   Based on this information, determine:
   - If a reorder is needed (reorderNeeded: true/false)
   - Estimate the number of days until the ingredient is out of stock (estimatedDaysUntilOutOfStock). If reorderNeeded is false, omit this.
   - Recommend a reorder quantity (recommendedReorderQuantity). If reorderNeeded is false, omit this.
-  - Explain your reasoning for the reorder recommendation (reasoning).
+  - Explain your reasoning for the reorder recommendation (reasoning). The recommended quantity unit should match the input unit.
 
   Output in JSON format.
   `,

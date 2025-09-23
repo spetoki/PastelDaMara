@@ -50,6 +50,7 @@ const formSchema = z.object({
   currentStockLevel: z.coerce
     .number()
     .min(0, 'Estoque atual não pode ser negativo.'),
+  stockUnit: z.enum(['g', 'kg', 'un']),
   historicalSalesData: z
     .string()
     .min(1, 'Dados históricos são obrigatórios.'),
@@ -69,6 +70,7 @@ export function StockManager() {
     defaultValues: {
       ingredientName: '',
       currentStockLevel: 0,
+      stockUnit: 'g',
       historicalSalesData: '10,12,15,11,13,18,20',
       minimumStockLevel: 0,
     },
@@ -82,6 +84,9 @@ export function StockManager() {
     if (selected) {
       form.setValue("currentStockLevel", selected.stock);
       form.setValue("minimumStockLevel", selected.minStock);
+      if (selected.unit === 'g' || selected.unit === 'kg' || selected.unit === 'un') {
+        form.setValue("stockUnit", selected.unit);
+      }
     }
   };
 
@@ -139,19 +144,43 @@ export function StockManager() {
                     </FormItem>
                   )}
                 />
-                <FormField
-                  control={form.control}
-                  name="currentStockLevel"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Estoque Atual</FormLabel>
-                      <FormControl>
-                        <Input type="number" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+                <div className="grid grid-cols-2 gap-4">
+                  <FormField
+                    control={form.control}
+                    name="currentStockLevel"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Estoque Atual</FormLabel>
+                        <FormControl>
+                          <Input type="number" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="stockUnit"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Unidade</FormLabel>
+                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Unidade" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            <SelectItem value="g">Gramas (g)</SelectItem>
+                            <SelectItem value="kg">Quilos (kg)</SelectItem>
+                            <SelectItem value="un">Unidades (un)</SelectItem>
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
                  <FormField
                   control={form.control}
                   name="minimumStockLevel"
@@ -233,7 +262,7 @@ export function StockManager() {
                     {analysisResult.recommendedReorderQuantity != null && (
                         <div className="p-4 rounded-lg bg-muted">
                             <p className="text-sm text-muted-foreground">Recompra Sugerida</p>
-                            <p className="text-2xl font-bold">{analysisResult.recommendedReorderQuantity} {mockStockItems.find(i => i.name === selectedIngredientName)?.unit}</p>
+                            <p className="text-2xl font-bold">{analysisResult.recommendedReorderQuantity} {form.getValues('stockUnit')}</p>
                         </div>
                     )}
                   </div>
