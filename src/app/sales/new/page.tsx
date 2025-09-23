@@ -28,13 +28,14 @@ import {
 } from '@/components/ui/select';
 import { mockProducts } from '@/lib/data';
 import type { Product, SaleItem, PaymentMethod } from '@/lib/types';
-import { MinusCircle, PlusCircle, Trash2, CreditCard } from 'lucide-react';
-import { Badge } from '@/components/ui/badge';
+import { MinusCircle, PlusCircle, CreditCard } from 'lucide-react';
+import { useToast } from '@/hooks/use-toast';
 
 export default function NewSalePage() {
   const [products] = useState<Product[]>(mockProducts);
   const [cart, setCart] = useState<SaleItem[]>([]);
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('Dinheiro');
+  const { toast } = useToast();
 
   const total = cart.reduce(
     (acc, item) => acc + item.product.price * item.quantity,
@@ -72,13 +73,29 @@ export default function NewSalePage() {
   }
 
   function finishSale() {
+    if (cart.length === 0) {
+      toast({
+        variant: 'destructive',
+        title: 'Carrinho vazio',
+        description: 'Adicione produtos ao carrinho antes de finalizar a venda.',
+      });
+      return;
+    }
+    
     console.log('Venda Finalizada:', {
       items: cart,
       total,
       paymentMethod,
     });
+    
+    toast({
+      title: 'Venda Finalizada com Sucesso!',
+      description: `Total: ${total.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}`,
+    });
+
     // Aqui você adicionaria a lógica para salvar a venda e limpar o carrinho
     setCart([]);
+    setPaymentMethod('Dinheiro');
   }
 
   return (
