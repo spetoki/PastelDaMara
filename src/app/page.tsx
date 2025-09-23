@@ -28,9 +28,9 @@ export default function Home() {
             <DollarSign className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">R$ 1.259,50</div>
+            <div className="text-2xl font-bold">R$ 0,00</div>
             <p className="text-xs text-muted-foreground">
-              +15.2% em relação a ontem
+              +0.0% em relação a ontem
             </p>
           </CardContent>
         </Card>
@@ -54,7 +54,7 @@ export default function Home() {
             <ShoppingCart className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">+82</div>
+            <div className="text-2xl font-bold">+0</div>
             <p className="text-xs text-muted-foreground">
               Total de vendas individuais
             </p>
