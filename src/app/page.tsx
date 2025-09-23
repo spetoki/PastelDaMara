@@ -79,7 +79,7 @@ export default function Home() {
             asChild
             className="h-24 text-lg bg-accent hover:bg-accent/90 text-accent-foreground"
           >
-            <Link href="/sales">
+            <Link href="/sales/new">
               <ShoppingCart className="mr-2 h-6 w-6" /> Nova Venda
             </Link>
           </Button>
