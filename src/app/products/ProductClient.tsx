@@ -42,7 +42,7 @@ import { mockProducts } from '@/lib/data';
 import type { Product } from '@/lib/types';
 import { Badge } from '@/components/ui/badge';
 import Image from 'next/image';
-import { PlusCircle, MoreHorizontal } from 'lucide-react';
+import { PlusCircle, MoreHorizontal, Upload } from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -50,6 +50,8 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Card } from '@/components/ui/card';
+import { useRef } from 'react';
+
 
 const productSchema = z.object({
   name: z.string().min(1, 'Nome é obrigatório'),
@@ -58,17 +60,31 @@ const productSchema = z.object({
   cost: z.coerce.number().positive('Custo deve ser positivo'),
   stock: z.coerce.number().int().min(0, 'Estoque não pode ser negativo'),
   stockUnit: z.enum(['g', 'un']),
-  imageUrl: z.string().url('URL da imagem inválida').optional().or(z.literal('')),
+  imageUrl: z.string().optional().or(z.literal('')),
 });
 
 export function ProductClient() {
   const [products, setProducts] = useState<Product[]>(mockProducts);
   const [open, setOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const form = useForm<z.infer<typeof productSchema>>({
     resolver: zodResolver(productSchema),
   });
+  
+  const imageUrlValue = form.watch('imageUrl');
+
+  function handleFileChange(event: React.ChangeEvent<HTMLInputElement>) {
+    const file = event.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        form.setValue('imageUrl', reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  }
 
   function handleOpenDialog(product: Product | null) {
     setEditingProduct(product);
@@ -150,9 +166,36 @@ export function ProductClient() {
                   name="imageUrl"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>URL da Imagem</FormLabel>
+                      <FormLabel>Imagem do Produto</FormLabel>
                       <FormControl>
-                        <Input placeholder="https://..." {...field} />
+                        <div>
+                          <Input
+                            type="file"
+                            accept="image/*"
+                            ref={fileInputRef}
+                            onChange={handleFileChange}
+                            className="hidden"
+                          />
+                          <Button
+                            type="button"
+                            variant="outline"
+                            onClick={() => fileInputRef.current?.click()}
+                          >
+                            <Upload className="mr-2 h-4 w-4" />
+                            Carregar Imagem
+                          </Button>
+                          {imageUrlValue && (
+                            <div className="mt-4">
+                              <Image
+                                src={imageUrlValue}
+                                alt="Preview"
+                                width={100}
+                                height={100}
+                                className="rounded-md object-cover"
+                              />
+                            </div>
+                          )}
+                        </div>
                       </FormControl>
                       <FormMessage />
                     </FormItem>
