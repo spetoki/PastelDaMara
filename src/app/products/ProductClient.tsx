@@ -49,6 +49,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import { Card } from '@/components/ui/card';
 
 const productSchema = z.object({
   name: z.string().min(1, 'Nome é obrigatório'),
