@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Image from 'next/image';
 import {
   Card,
@@ -26,18 +26,22 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
-import { mockProducts, addSale } from '@/lib/data';
+import { getProducts, addSale } from '@/lib/data';
 import type { Product, SaleItem, PaymentMethod } from '@/lib/types';
 import { Separator } from '@/components/ui/separator';
 import { useToast } from '@/hooks/use-toast';
 import { PlusCircle, MinusCircle, Trash2, ShoppingCart, CreditCard } from 'lucide-react';
 
 export default function NewSalePage() {
-  const [products] = useState<Product[]>(mockProducts);
+  const [products, setProducts] = useState<Product[]>([]);
   const [cart, setCart] = useState<SaleItem[]>([]);
   const [isCheckoutOpen, setCheckoutOpen] = useState(false);
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('Dinheiro');
   const { toast } = useToast();
+
+  useEffect(() => {
+    setProducts(getProducts());
+  }, []);
 
   const handleAddToCart = (product: Product) => {
     setCart((prevCart) => {

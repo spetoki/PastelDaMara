@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   Table,
   TableBody,
@@ -38,7 +38,7 @@ import {
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
-import { mockProducts } from '@/lib/data';
+import { getProducts, addProduct, updateProduct } from '@/lib/data';
 import type { Product } from '@/lib/types';
 import { Badge } from '@/components/ui/badge';
 import Image from 'next/image';
@@ -64,10 +64,14 @@ const productSchema = z.object({
 });
 
 export function ProductClient() {
-  const [products, setProducts] = useState<Product[]>(mockProducts);
+  const [products, setProducts] = useState<Product[]>([]);
   const [open, setOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    setProducts(getProducts());
+  }, []);
 
   const form = useForm<z.infer<typeof productSchema>>({
     resolver: zodResolver(productSchema),
@@ -107,20 +111,22 @@ export function ProductClient() {
   function onSubmit(values: z.infer<typeof productSchema>) {
     if (editingProduct) {
       // Edit existing product
-      const updatedProducts = products.map((p) =>
-        p.id === editingProduct.id ? { ...p, ...values, imageUrl: values.imageUrl || p.imageUrl } : p
-      );
-      setProducts(updatedProducts);
+      const updatedProductData: Product = {
+        ...editingProduct,
+        ...values,
+        imageUrl: values.imageUrl || editingProduct.imageUrl
+      };
+      updateProduct(updatedProductData);
     } else {
       // Add new product
-      const newProduct: Product = {
-        id: (products.length + 1).toString(),
+      const newProductData = {
         ...values,
         imageUrl: values.imageUrl || `https://picsum.photos/seed/${values.name}/200/200`,
         imageHint: 'novo item',
       };
-      setProducts([newProduct, ...products]);
+      addProduct(newProductData);
     }
+    setProducts(getProducts()); // Refresh the list
     form.reset();
     setOpen(false);
     setEditingProduct(null);

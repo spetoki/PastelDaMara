@@ -6,7 +6,7 @@ const pastelQueijo = PlaceHolderImages.find(p => p.id === 'pastel-queijo');
 const cocaCola = PlaceHolderImages.find(p => p.id === 'coca-cola');
 
 
-export const mockProducts: Product[] = [
+export let mockProducts: Product[] = [
     {
         id: '1',
         name: 'Pastel de Carne',
@@ -64,4 +64,25 @@ export function addSale(sale: Omit<Sale, 'id' | 'date'>) {
   mockSales.push(newSale);
   mockCashRegister.sales += newSale.total;
   return newSale;
+}
+
+
+export function getProducts() {
+  return mockProducts;
+}
+
+export function addProduct(product: Omit<Product, 'id'>) {
+  const newProduct: Product = {
+    ...product,
+    id: (mockProducts.length + 1).toString(),
+  };
+  mockProducts = [newProduct, ...mockProducts];
+  return newProduct;
+}
+
+export function updateProduct(updatedProduct: Product) {
+  mockProducts = mockProducts.map((p) =>
+    p.id === updatedProduct.id ? updatedProduct : p
+  );
+  return updatedProduct;
 }
