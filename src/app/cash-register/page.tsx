@@ -7,16 +7,11 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
-import { ArrowDown, ArrowUp, Briefcase, PlusCircle, MinusCircle } from 'lucide-react';
+import { mockCashRegister } from '@/lib/data';
+import { Briefcase, PlusCircle, MinusCircle } from 'lucide-react';
 
 export default function CashRegisterPage() {
-  const summary = {
-    initial: 0.0,
-    sales: 0.0,
-    expenses: 0.0,
-    withdrawals: 0.0,
-    additions: 0.0,
-  };
+  const summary = mockCashRegister;
 
   const profit = summary.sales - summary.expenses;
   const currentBalance =

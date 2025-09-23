@@ -1,4 +1,4 @@
-import type { Product, Sale, StockItem } from './types';
+import type { Product, Sale, StockItem, CashRegisterSummary } from './types';
 import { PlaceHolderImages } from './placeholder-images';
 
 const pastelCarne = PlaceHolderImages.find(p => p.id === 'pastel-carne');
@@ -42,13 +42,26 @@ export const mockProducts: Product[] = [
     }
 ];
 
-export const mockStockItems: StockItem[] = [
-  { id: '1', name: 'Farinha de Trigo', stock: 5000, unit: 'g', minStock: 1000 },
-  { id: '2', name: 'Carne Moída', stock: 2500, unit: 'g', minStock: 500 },
-  { id: '3', name: 'Queijo Mussarela', stock: 800, unit: 'g', minStock: 300 },
-  { id: '4', name: 'Óleo de Soja', stock: 3000, unit: 'ml', minStock: 1000 },
-  { id: '5', name: 'Frango Desfiado', stock: 1500, unit: 'g', minStock: 400 },
-  { id: '6', name: 'Tomate', stock: 2000, unit: 'g', minStock: 500 },
-];
+export const mockStockItems: StockItem[] = [];
 
-export const mockSales: Sale[] = [];
+export let mockSales: Sale[] = [];
+
+export let mockCashRegister: CashRegisterSummary = {
+  initial: 0.0,
+  sales: 0.0,
+  expenses: 0.0,
+  withdrawals: 0.0,
+  additions: 0.0,
+};
+
+// Funções para manipular os dados mockados
+export function addSale(sale: Omit<Sale, 'id' | 'date'>) {
+  const newSale: Sale = {
+    ...sale,
+    id: (mockSales.length + 1).toString(),
+    date: new Date().toISOString(),
+  };
+  mockSales.push(newSale);
+  mockCashRegister.sales += newSale.total;
+  return newSale;
+}

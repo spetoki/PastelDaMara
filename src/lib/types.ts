@@ -34,3 +34,11 @@ export type Sale = {
   total: number;
   paymentMethod: PaymentMethod;
 };
+
+export type CashRegisterSummary = {
+  initial: number;
+  sales: number;
+  expenses: number;
+  withdrawals: number;
+  additions: number;
+};
