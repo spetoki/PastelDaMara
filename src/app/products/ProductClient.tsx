@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import {
   Table,
   TableBody,
@@ -50,7 +50,6 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Card } from '@/components/ui/card';
-import { useRef } from 'react';
 
 
 const productSchema = z.object({
@@ -60,6 +59,7 @@ const productSchema = z.object({
   cost: z.coerce.number().positive('Custo deve ser positivo'),
   stock: z.coerce.number().int().min(0, 'Estoque não pode ser negativo'),
   stockUnit: z.enum(['g', 'un']),
+  minStock: z.coerce.number().int().min(0, 'Estoque mínimo não pode ser negativo'),
   imageUrl: z.string().optional().or(z.literal('')),
 });
 
@@ -102,6 +102,7 @@ export function ProductClient() {
         cost: 0,
         stock: 0,
         stockUnit: 'un',
+        minStock: 0,
         imageUrl: '',
       });
     }
@@ -296,6 +297,19 @@ export function ProductClient() {
                     )}
                   />
                 </div>
+                <FormField
+                  control={form.control}
+                  name="minStock"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Estoque Mínimo</FormLabel>
+                      <FormControl>
+                        <Input type="number" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
                 <DialogFooter>
                   <Button type="submit">Salvar Produto</Button>
                 </DialogFooter>

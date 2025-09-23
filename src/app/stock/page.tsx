@@ -8,7 +8,7 @@ export default function StockPage() {
           Controle de Estoque
         </h1>
         <p className="text-muted-foreground">
-          Adicione, edite e gerencie os ingredientes e itens em estoque.
+          Gerencie os produtos em estoque. O estoque é atualizado a partir da tela de Produtos.
         </p>
       </div>
       <StockManager />

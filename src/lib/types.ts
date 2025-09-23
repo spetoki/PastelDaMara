@@ -10,6 +10,7 @@ export type Product = {
   cost: number;
   stock: number;
   stockUnit: 'g' | 'un';
+  minStock: number;
   imageUrl: string;
   imageHint: string;
 };

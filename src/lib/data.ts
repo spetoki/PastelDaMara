@@ -15,6 +15,7 @@ export let mockProducts: Product[] = [
         cost: 3.0,
         stock: 50,
         stockUnit: 'un',
+        minStock: 10,
         imageUrl: pastelCarne?.imageUrl || '',
         imageHint: pastelCarne?.imageHint || 'food pastel'
     },
@@ -26,6 +27,7 @@ export let mockProducts: Product[] = [
         cost: 2.8,
         stock: 40,
         stockUnit: 'un',
+        minStock: 10,
         imageUrl: pastelQueijo?.imageUrl || '',
         imageHint: pastelQueijo?.imageHint || 'cheese pastel'
     },
@@ -37,12 +39,11 @@ export let mockProducts: Product[] = [
         cost: 2.2,
         stock: 100,
         stockUnit: 'un',
+        minStock: 24,
         imageUrl: cocaCola?.imageUrl || '',
         imageHint: cocaCola?.imageHint || 'soda can'
     }
 ];
-
-export const mockStockItems: StockItem[] = [];
 
 export let mockSales: Sale[] = [];
 
