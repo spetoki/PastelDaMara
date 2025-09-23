@@ -49,17 +49,24 @@ export default function NewSalePage() {
     // Periodically check for updates to products, in case they are edited in another tab
     const interval = setInterval(() => {
         const updatedProducts = getProducts();
+        setProducts(currentProducts => {
+            if (JSON.stringify(updatedProducts) !== JSON.stringify(currentProducts)) {
+                return updatedProducts;
+            }
+            return currentProducts;
+        });
+
         const updatedCombos = getCombos();
-        if (JSON.stringify(updatedProducts) !== JSON.stringify(products)) {
-            setProducts(updatedProducts);
-        }
-        if (JSON.stringify(updatedCombos) !== JSON.stringify(combos)) {
-            setCombos(updatedCombos);
-        }
+        setCombos(currentCombos => {
+           if (JSON.stringify(updatedCombos) !== JSON.stringify(currentCombos)) {
+            return updatedCombos;
+           }
+           return currentCombos;
+        });
     }, 1000); // Check every second
 
     return () => clearInterval(interval);
-  }, [products, combos]);
+  }, []);
 
   const handleAddToCart = (item: Product | Combo) => {
     setCart((prevCart) => {

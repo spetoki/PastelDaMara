@@ -10,7 +10,6 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
-import { mockCashRegister } from '@/lib/data';
 import type { CashRegisterSummary } from '@/lib/types';
 import { Briefcase, PlusCircle, MinusCircle } from 'lucide-react';
 import { getSales } from '@/lib/data';
@@ -36,13 +35,16 @@ export default function CashRegisterPage() {
   useEffect(() => {
     const interval = setInterval(() => {
       const updatedSummary = loadCashRegisterFromStorage();
-      if (JSON.stringify(updatedSummary) !== JSON.stringify(summary)) {
-        setSummary(updatedSummary);
-      }
+      setSummary(currentSummary => {
+          if (JSON.stringify(updatedSummary) !== JSON.stringify(currentSummary)) {
+              return updatedSummary;
+          }
+          return currentSummary;
+      });
     }, 500); // Check for updates every 500ms
 
     return () => clearInterval(interval);
-  }, [summary]);
+  }, []);
 
   const profit = summary.sales - summary.expenses;
   const currentBalance =

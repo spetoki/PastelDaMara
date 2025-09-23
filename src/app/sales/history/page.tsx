@@ -24,22 +24,20 @@ import Image from 'next/image';
 
 export default function SalesHistoryPage() {
   const [sales, setSales] = useState<Sale[]>(getSales());
-  const [lastSalesCount, setLastSalesCount] = useState(sales.length);
 
-  // This is a simple way to force a re-render if the underlying data changes.
-  // In a real-world app, you might use a state management library or context.
   useEffect(() => {
     const interval = setInterval(() => {
       const currentSales = getSales();
-      // A simple check to see if the length has changed.
-      if (currentSales.length !== lastSalesCount) {
-        setSales(currentSales);
-        setLastSalesCount(currentSales.length);
-      }
+      setSales(prevSales => {
+        if (currentSales.length !== prevSales.length) {
+          return currentSales;
+        }
+        return prevSales;
+      });
     }, 500); // Check every half a second
 
     return () => clearInterval(interval);
-  }, [lastSalesCount]);
+  }, []);
 
 
   return (
@@ -74,6 +72,8 @@ export default function SalesHistoryPage() {
 }
 
 function SalesList({ sales }: { sales: Sale[] }) {
+  const sortedSales = [...sales].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+  
   return (
     <Card>
       <CardContent className="pt-6">
@@ -90,8 +90,8 @@ function SalesList({ sales }: { sales: Sale[] }) {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {sales.length > 0 ? (
-                sales.map((sale) => (
+            {sortedSales.length > 0 ? (
+                sortedSales.map((sale) => (
                   <TableRow key={sale.id}>
                     <TableCell>
                       <div className="font-medium">Venda #{sale.id.slice(-4)}</div>
@@ -108,7 +108,7 @@ function SalesList({ sales }: { sales: Sale[] }) {
                       </Badge>
                     </TableCell>
                     <TableCell className="hidden md:table-cell">
-                      {new Date(sale.date).toLocaleDateString('pt-BR')}
+                      {new Date(sale.date).toLocaleString('pt-BR')}
                     </TableCell>
                     <TableCell className="text-right">
                       {sale.total.toLocaleString('pt-BR', {
