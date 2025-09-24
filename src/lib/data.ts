@@ -70,8 +70,7 @@ export async function addCombo(combo: Omit<Combo, 'id'>) {
     };
     delete comboData.products;
 
-    const docRef = doc(collection(db, 'combos')); // Create a reference with a new ID
-    await setDoc(docRef, comboData); // Use setDoc to create the document
+    const docRef = await addDoc(combosCollection, comboData);
 
     // For returning, we still want the full product objects for the UI
     return { ...combo, id: docRef.id };
