@@ -86,6 +86,17 @@ export function ProductClient() {
 
   const form = useForm<z.infer<typeof productSchema>>({
     resolver: zodResolver(productSchema),
+    defaultValues: {
+      name: '',
+      category: 'Pastéis',
+      price: 0,
+      cost: 0,
+      stock: 0,
+      stockUnit: 'un',
+      minStock: 0,
+      imageUrl: '',
+      barcode: '',
+    },
   });
   
   const imageUrlValue = form.watch('imageUrl');
