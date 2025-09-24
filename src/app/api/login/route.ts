@@ -2,7 +2,7 @@ import {NextResponse} from 'next/server';
 import {sign} from 'jsonwebtoken';
 import {cookies} from 'next/headers';
 
-const SECRET_KEY = process.env.ACCESS_KEY || 'default-secret-key-for-dev';
+const SECRET_KEY = process.env.JWT_SECRET_KEY || 'default-secret-key-for-dev';
 const ACCESS_KEY = process.env.ACCESS_KEY || '1234';
 
 export async function POST(request: Request) {
