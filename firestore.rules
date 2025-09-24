@@ -3,64 +3,118 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    // Helper functions for validation
-    function isSignedIn() {
-      return request.auth != null;
+    // Helper functions for data validation
+    function isString(value) {
+      return value is string;
     }
 
-    // Products: Allow public read. Write requires specific fields.
-    match /products/{productId} {
-      allow read: if true;
-      allow create: if request.resource.data.name is string &&
-                       request.resource.data.category is string &&
-                       request.resource.data.price is number &&
-                       request.resource.data.cost is number &&
-                       request.resource.data.stock is number &&
-                       request.resource.data.stockUnit is string &&
-                       request.resource.data.minStock is number;
-      allow update: if request.resource.data.name is string &&
-                       request.resource.data.category is string &&
-                       request.resource.data.price is number &&
-                       request.resource.data.cost is number &&
-                       request.resource.data.stock is number &&
-                       request.resource.data.stockUnit is string &&
-                       request.resource.data.minStock is number;
-      allow delete: if true; // Or restrict to signed in users later
+    function isNumber(value) {
+      return value is number;
     }
 
-    // Combos: Allow public read. Write requires specific fields.
-    match /combos/{comboId} {
-      allow read: if true;
-      allow create: if request.resource.data.name is string &&
-                       request.resource.data.price is number &&
-                       request.resource.data.productIds is list;
-      allow update: if false; // Disallow updates for now for simplicity
-      allow delete: if true;
-    }
-
-    // Sales: Allow public read. Write requires specific fields.
-    match /sales/{saleId} {
-      allow read: if true;
-      allow create: if request.resource.data.total is number &&
-                       request.resource.data.paymentMethod is string &&
-                       request.resource.data.items is list &&
-                       request.resource.data.date is string;
-      allow update, delete: if false; // Sales should be immutable
+    function isOptionalString(value) {
+      return value == null || isString(value);
     }
     
-    // Expenses: Allow public read. Write requires specific fields.
-    match /expenses/{expenseId} {
-        allow read: if true;
-        allow create: if request.resource.data.description is string &&
-                         request.resource.data.amount is number &&
-                         request.resource.data.date is timestamp;
-        allow update, delete: if false; // Expenses should be immutable
+    function isArray(value) {
+      return value is list;
     }
 
-    // App State: General settings for the app
-    match /appState/{stateId} {
-        allow read: if true;
-        allow write: if true; // Allow writing for things like messages, cash register updates
+    function isValidProductData(data) {
+      return isString(data.name) &&
+             isString(data.category) &&
+             isNumber(data.price) &&
+             isNumber(data.cost) &&
+             isNumber(data.stock) &&
+             isString(data.stockUnit) &&
+             isNumber(data.minStock) &&
+             isString(data.imageUrl) &&
+             isString(data.imageHint) &&
+             isOptionalString(data.barcode);
+    }
+    
+    function isValidComboData(data) {
+        return isString(data.name) &&
+               isNumber(data.price) &&
+               isArray(data.productIds) &&
+               isString(data.imageUrl) &&
+               isString(data.imageHint);
+    }
+
+    function isValidSaleData(data) {
+      return isArray(data.items) &&
+             isNumber(data.total) &&
+             isString(data.paymentMethod) &&
+             isString(data.date);
+    }
+
+    function isValidExpenseData(data) {
+        return isString(data.description) &&
+               isNumber(data.amount) &&
+               (data.date is timestamp);
+    }
+
+    function isValidCashRegisterData(data) {
+        return isNumber(data.initial) &&
+               isNumber(data.sales) &&
+               isNumber(data.expenses) &&
+               isNumber(data.withdrawals) &&
+               isNumber(data.additions);
+    }
+
+    function isValidMessageData(data) {
+        return isString(data.message);
+    }
+
+
+    // Rules for each collection
+    match /products/{productId} {
+      allow read, list;
+      allow create: if isValidProductData(request.resource.data);
+      allow update: if isValidProductData(request.resource.data);
+      allow delete;
+    }
+
+    match /combos/{comboId} {
+        allow read, list;
+        allow create: if isValidComboData(request.resource.data);
+        allow update: if isValidComboData(request.resource.data);
+        allow delete;
+    }
+
+    match /sales/{saleId} {
+      allow read, list;
+      allow create: if isValidSaleData(request.resource.data);
+    }
+    
+    match /expenses/{expenseId} {
+        allow read, list;
+        allow create: if isValidExpenseData(request.resource.data);
+    }
+    
+    match /appState/{docId} {
+        // More granular control for appState documents
+        allow read;
+
+        match /cashRegister {
+            allow write: if isValidCashRegisterData(request.resource.data);
+        }
+        
+        match /dashboardMessage {
+             allow write: if isValidMessageData(request.resource.data);
+        }
+
+        match /rafaelMessage {
+             allow write: if isValidMessageData(request.resource.data);
+        }
+
+        // Default deny for any other documents in appState
+        allow write: if false;
+    }
+
+    // Default deny for any other collections
+    match /{path=**} {
+      allow read, write: if false;
     }
   }
 }
