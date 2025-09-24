@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import Image from 'next/image';
 import {
   Card,
@@ -26,11 +26,12 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
+import { Input } from '@/components/ui/input';
 import { getProducts, addSale, getCombos } from '@/lib/data';
 import type { Product, SaleItem, PaymentMethod, Combo } from '@/lib/types';
 import { Separator } from '@/components/ui/separator';
 import { useToast } from '@/hooks/use-toast';
-import { PlusCircle, MinusCircle, Trash2, ShoppingCart, CreditCard } from 'lucide-react';
+import { PlusCircle, MinusCircle, Trash2, ShoppingCart, CreditCard, Barcode } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 export default function NewSalePage() {
@@ -39,12 +40,17 @@ export default function NewSalePage() {
   const [cart, setCart] = useState<SaleItem[]>([]);
   const [isCheckoutOpen, setCheckoutOpen] = useState(false);
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('Dinheiro');
+  const [barcode, setBarcode] = useState('');
   const { toast } = useToast();
+  const barcodeInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     // Load products and combos on component mount
     setProducts(getProducts());
     setCombos(getCombos());
+
+    // Focus barcode input on page load
+    barcodeInputRef.current?.focus();
 
     // Periodically check for updates to products, in case they are edited in another tab
     const interval = setInterval(() => {
@@ -78,6 +84,27 @@ export default function NewSalePage() {
       }
       return [...prevCart, { product: item, quantity: 1 }];
     });
+  };
+
+  const handleBarcodeScan = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter' && barcode.trim() !== '') {
+      e.preventDefault();
+      const foundProduct = products.find(p => p.barcode === barcode.trim());
+      if (foundProduct) {
+        handleAddToCart(foundProduct);
+        toast({
+            title: 'Produto Adicionado',
+            description: `${foundProduct.name} foi adicionado ao carrinho.`,
+        });
+      } else {
+        toast({
+            variant: 'destructive',
+            title: 'Produto não encontrado',
+            description: 'Nenhum produto corresponde a este código de barras.',
+        });
+      }
+      setBarcode(''); // Clear input after scan
+    }
   };
 
   const updateQuantity = (itemId: string, newQuantity: number) => {
@@ -118,15 +145,31 @@ export default function NewSalePage() {
 
     setCart([]);
     setCheckoutOpen(false);
+    barcodeInputRef.current?.focus(); // Focus back to barcode input
   };
 
   return (
     <div className="grid md:grid-cols-3 gap-6 items-start">
       {/* Product and Combo List */}
-      <div className="md:col-span-2">
-        <h1 className="text-2xl font-bold tracking-tight md:text-3xl mb-4">
-          Ponto de Venda
-        </h1>
+      <div className="md:col-span-2 space-y-4">
+        <div className='flex justify-between items-center'>
+            <h1 className="text-2xl font-bold tracking-tight md:text-3xl">
+              Ponto de Venda
+            </h1>
+            <div className="relative w-full max-w-sm">
+                 <Barcode className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+                 <Input
+                    ref={barcodeInputRef}
+                    type="text"
+                    placeholder="Ler código de barras..."
+                    value={barcode}
+                    onChange={(e) => setBarcode(e.target.value)}
+                    onKeyDown={handleBarcodeScan}
+                    className="pl-10 h-11 text-base"
+                />
+            </div>
+        </div>
+
         <Tabs defaultValue="products">
           <TabsList className="mb-4">
             <TabsTrigger value="products">Produtos</TabsTrigger>
