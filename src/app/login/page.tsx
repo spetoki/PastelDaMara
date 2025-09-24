@@ -13,7 +13,8 @@ import {
 import {Input} from '@/components/ui/input';
 import {Label} from '@/components/ui/label';
 import {useToast} from '@/hooks/use-toast';
-import { UtensilsCrossed, KeyRound } from 'lucide-react';
+import { UtensilsCrossed, KeyRound, Info } from 'lucide-react';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 
 
 export default function LoginPage() {
@@ -94,6 +95,13 @@ export default function LoginPage() {
               {isLoading ? 'Entrando...' : 'Entrar'}
             </Button>
           </form>
+            <Alert className="mt-4">
+              <Info className="h-4 w-4" />
+              <AlertTitle>Lembrete</AlertTitle>
+              <AlertDescription>
+                Rafael, sua chave de acesso é 1234
+              </AlertDescription>
+            </Alert>
         </CardContent>
       </Card>
     </div>
