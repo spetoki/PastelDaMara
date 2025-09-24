@@ -1,7 +1,7 @@
+
 'use client';
 
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -12,32 +12,10 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { UtensilsCrossed, User, LogOut } from 'lucide-react';
-import { useToast } from '@/hooks/use-toast';
+import { UtensilsCrossed, User } from 'lucide-react';
 
 
 export function Header() {
-  const router = useRouter();
-  const { toast } = useToast();
-
-  const handleLogout = async () => {
-    try {
-      await fetch('/api/login', { method: 'DELETE' });
-      toast({
-        title: 'Logout realizado',
-        description: 'Você foi desconectado com sucesso.',
-      });
-      router.push('/login');
-      router.refresh();
-    } catch (error) {
-       toast({
-        variant: 'destructive',
-        title: 'Erro',
-        description: 'Não foi possível fazer logout.',
-      });
-    }
-  };
-
 
   return (
     <header className="sticky top-0 z-10 flex h-16 items-center gap-4 border-b bg-card px-4 md:px-6">
@@ -67,11 +45,6 @@ export function Header() {
             <DropdownMenuSeparator />
             <DropdownMenuItem>Configurações</DropdownMenuItem>
             <DropdownMenuItem>Suporte</DropdownMenuItem>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem onClick={handleLogout} className="text-destructive">
-                <LogOut className="mr-2 h-4 w-4" />
-                <span>Sair</span>
-            </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
       </div>
