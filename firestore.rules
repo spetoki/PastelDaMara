@@ -2,10 +2,65 @@ rules_version = '2';
 
 service cloud.firestore {
   match /databases/{database}/documents {
-    // Regra de desenvolvimento: permite acesso total.
-    // ATENÇÃO: Isso deve ser alterado para um ambiente de produção.
-    match /{document=**} {
-      allow read, write: if true;
+
+    // Helper functions for validation
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    // Products: Allow public read. Write requires specific fields.
+    match /products/{productId} {
+      allow read: if true;
+      allow create: if request.resource.data.name is string &&
+                       request.resource.data.category is string &&
+                       request.resource.data.price is number &&
+                       request.resource.data.cost is number &&
+                       request.resource.data.stock is number &&
+                       request.resource.data.stockUnit is string &&
+                       request.resource.data.minStock is number;
+      allow update: if request.resource.data.name is string &&
+                       request.resource.data.category is string &&
+                       request.resource.data.price is number &&
+                       request.resource.data.cost is number &&
+                       request.resource.data.stock is number &&
+                       request.resource.data.stockUnit is string &&
+                       request.resource.data.minStock is number;
+      allow delete: if true; // Or restrict to signed in users later
+    }
+
+    // Combos: Allow public read. Write requires specific fields.
+    match /combos/{comboId} {
+      allow read: if true;
+      allow create: if request.resource.data.name is string &&
+                       request.resource.data.price is number &&
+                       request.resource.data.productIds is list;
+      allow update: if false; // Disallow updates for now for simplicity
+      allow delete: if true;
+    }
+
+    // Sales: Allow public read. Write requires specific fields.
+    match /sales/{saleId} {
+      allow read: if true;
+      allow create: if request.resource.data.total is number &&
+                       request.resource.data.paymentMethod is string &&
+                       request.resource.data.items is list &&
+                       request.resource.data.date is string;
+      allow update, delete: if false; // Sales should be immutable
+    }
+    
+    // Expenses: Allow public read. Write requires specific fields.
+    match /expenses/{expenseId} {
+        allow read: if true;
+        allow create: if request.resource.data.description is string &&
+                         request.resource.data.amount is number &&
+                         request.resource.data.date is timestamp;
+        allow update, delete: if false; // Expenses should be immutable
+    }
+
+    // App State: General settings for the app
+    match /appState/{stateId} {
+        allow read: if true;
+        allow write: if true; // Allow writing for things like messages, cash register updates
     }
   }
 }
