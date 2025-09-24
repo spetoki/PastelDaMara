@@ -7,6 +7,7 @@ import {
   type LucideIcon,
   ShoppingCart,
   Gift,
+  MessageSquare,
 } from 'lucide-react';
 
 export type NavItem = {
@@ -51,4 +52,9 @@ export const navItems: NavItem[] = [
     label: 'Caixa',
     icon: Banknote,
   },
+  {
+    href: '/rafael',
+    label: 'Rafael clik aqui',
+    icon: MessageSquare,
+  }
 ];

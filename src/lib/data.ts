@@ -14,6 +14,7 @@ import {
   limit,
   Timestamp,
   getDoc,
+  setDoc,
 } from 'firebase/firestore';
 
 // --- Collection References ---
@@ -21,7 +22,7 @@ const productsCollection = collection(db, 'products');
 const combosCollection = collection(db, 'combos');
 const salesCollection = collection(db, 'sales');
 const expensesCollection = collection(db, 'expenses');
-const cashRegisterDoc = doc(db, 'appState', 'cashRegister');
+const appStateCollection = collection(db, 'appState');
 
 
 // --- Helper to convert Firestore docs to objects ---
@@ -146,7 +147,8 @@ export async function addExpense(expense: Omit<Expense, 'id' | 'date'>) {
 
 // --- Cash Register Functions ---
 export async function getCashRegisterSummary(): Promise<CashRegisterSummary> {
-    const docSnap = await getDoc(cashRegisterDoc);
+    const docRef = doc(db, 'appState', 'cashRegister');
+    const docSnap = await getDoc(docRef);
     if (docSnap.exists()) {
         return docSnap.data() as CashRegisterSummary;
     } else {
@@ -158,7 +160,7 @@ export async function getCashRegisterSummary(): Promise<CashRegisterSummary> {
             withdrawals: 0,
             additions: 0,
         };
-        await addDoc(collection(db, 'appState'), initialSummary);
+        await setDoc(docRef, initialSummary);
         return initialSummary;
     }
 }
@@ -175,7 +177,20 @@ export async function getDashboardMessage(): Promise<string> {
 
 export async function saveDashboardMessage(message: string): Promise<void> {
     const docRef = doc(db, 'appState', 'dashboardMessage');
-    await updateDoc(docRef, { message }).catch(async () => {
-         await addDoc(collection(db, 'appState'), {message});
-    });
+    await setDoc(docRef, { message });
+}
+
+// --- Rafael Message Functions ---
+export async function getRafaelMessage(): Promise<string> {
+    const docRef = doc(db, 'appState', 'rafaelMessage');
+    const docSnap = await getDoc(docRef);
+    if (docSnap.exists() && docSnap.data().message) {
+        return docSnap.data().message;
+    }
+    return '';
+}
+
+export async function saveRafaelMessage(message: string): Promise<void> {
+    const docRef = doc(db, 'appState', 'rafaelMessage');
+    await setDoc(docRef, { message });
 }
