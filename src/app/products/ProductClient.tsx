@@ -42,7 +42,7 @@ import { getProducts, addProduct, updateProduct } from '@/lib/data';
 import type { Product } from '@/lib/types';
 import { Badge } from '@/components/ui/badge';
 import Image from 'next/image';
-import { PlusCircle, MoreHorizontal, Upload, Barcode } from 'lucide-react';
+import { PlusCircle, MoreHorizontal, Upload, Barcode, Database } from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -50,6 +50,8 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Card } from '@/components/ui/card';
+import { seedDatabase } from '@/ai/flows/seed-database';
+import { useToast } from '@/hooks/use-toast';
 
 
 const productSchema = z.object({
@@ -69,12 +71,16 @@ export function ProductClient() {
   const [open, setOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const { toast } = useToast();
+  const [isSeeding, setIsSeeding] = useState(false);
+
+
+  async function fetchProducts() {
+    const data = await getProducts();
+    setProducts(data);
+  }
 
   useEffect(() => {
-    async function fetchProducts() {
-      const data = await getProducts();
-      setProducts(data);
-    }
     fetchProducts();
   }, []);
 
@@ -114,6 +120,31 @@ export function ProductClient() {
     }
     setOpen(true);
   }
+  
+  async function handleSeedDatabase() {
+    setIsSeeding(true);
+    toast({
+      title: 'Populando o banco de dados...',
+      description: 'Aguarde um momento, estamos adicionando os produtos iniciais.',
+    });
+
+    const result = await seedDatabase();
+
+    if (result.success) {
+      toast({
+        title: 'Sucesso!',
+        description: 'Os dados iniciais foram adicionados ao banco de dados.',
+      });
+      await fetchProducts(); // Refresh the product list
+    } else {
+       toast({
+        variant: 'destructive',
+        title: 'Erro!',
+        description: 'Não foi possível adicionar os dados iniciais.',
+      });
+    }
+     setIsSeeding(false);
+  }
 
   async function onSubmit(values: z.infer<typeof productSchema>) {
     if (editingProduct) {
@@ -142,7 +173,13 @@ export function ProductClient() {
 
   return (
     <>
-      <div className="flex justify-end">
+      <div className="flex justify-end gap-2">
+         {products.length === 0 && (
+          <Button variant="outline" onClick={handleSeedDatabase} disabled={isSeeding}>
+            <Database className="mr-2 h-4 w-4" />
+            {isSeeding ? 'Adicionando...' : 'Adicionar Dados Iniciais'}
+          </Button>
+        )}
         <Dialog open={open} onOpenChange={setOpen}>
           <DialogTrigger asChild>
             <Button onClick={() => handleOpenDialog(null)}>
@@ -403,6 +440,15 @@ export function ProductClient() {
             ))}
           </TableBody>
         </Table>
+         {products.length === 0 && !isSeeding && (
+          <div className="text-center p-8">
+            <p className="text-muted-foreground mb-4">Seu banco de dados parece estar vazio.</p>
+             <Button variant="default" onClick={handleSeedDatabase}>
+                <Database className="mr-2 h-4 w-4" />
+                Adicionar Dados Iniciais
+            </Button>
+          </div>
+        )}
       </Card>
     </>
   );
