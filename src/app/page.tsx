@@ -39,6 +39,10 @@ export default function Home() {
             Atualizado com as configurações pedidas: leitor de código de barras
             e interação com vários aparelhos (PC e celular).
           </p>
+
+          <p className="font-bold text-primary">
+            O aplicativo esta pronto com todas as atualizações pedidas. ja esta 100% utilizavel. so adicioar os produdos e vender.
+          </p>
           
           <p className="font-semibold">Para entrar, a senha é: <span className="font-bold text-accent">0201</span></p>
 
