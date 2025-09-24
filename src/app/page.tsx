@@ -39,6 +39,8 @@ export default function Home() {
             Atualizado com as configurações pedidas: leitor de código de barras
             e interação com vários aparelhos (PC e celular).
           </p>
+          
+          <p className="font-semibold">Para entrar, a senha é: <span className="font-bold text-accent">0201</span></p>
 
           <div className="space-y-2 rounded-lg border bg-muted/50 p-4">
             <p>
