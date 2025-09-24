@@ -99,7 +99,16 @@ export default function LoginPage() {
               <Info className="h-4 w-4" />
               <AlertTitle>Lembrete</AlertTitle>
               <AlertDescription>
-                Rafael, sua chave de acesso é 1234
+                <p>Rafael estou editando o app, fazendo as melhorias</p>
+                <p>Estou sem whats, me chama no instagran</p>
+                <a
+                  href="https://www.instagram.com/irineu.marcos"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-primary underline"
+                >
+                  https://www.instagram.com/irineu.marcos
+                </a>
               </AlertDescription>
             </Alert>
         </CardContent>
