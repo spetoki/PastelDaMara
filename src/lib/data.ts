@@ -44,7 +44,8 @@ export async function getProducts(): Promise<Product[]> {
 }
 
 export async function addProduct(product: Omit<Product, 'id'>) {
-  const docRef = await addDoc(productsCollection, product);
+  const docRef = doc(collection(db, 'products')); // Create a reference with a new ID
+  await setDoc(docRef, product); // Use setDoc to create the document
   return { ...product, id: docRef.id };
 }
 
@@ -70,7 +71,8 @@ export async function addCombo(combo: Omit<Combo, 'id'>) {
     };
     delete comboData.products;
 
-    const docRef = await addDoc(combosCollection, comboData);
+    const docRef = doc(collection(db, 'combos')); // Create a reference with a new ID
+    await setDoc(docRef, comboData); // Use setDoc to create the document
 
     // For returning, we still want the full product objects for the UI
     return { ...combo, id: docRef.id };
