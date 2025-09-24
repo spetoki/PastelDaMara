@@ -71,7 +71,11 @@ export function ProductClient() {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    setProducts(getProducts());
+    async function fetchProducts() {
+      const data = await getProducts();
+      setProducts(data);
+    }
+    fetchProducts();
   }, []);
 
   const form = useForm<z.infer<typeof productSchema>>({
@@ -111,7 +115,7 @@ export function ProductClient() {
     setOpen(true);
   }
 
-  function onSubmit(values: z.infer<typeof productSchema>) {
+  async function onSubmit(values: z.infer<typeof productSchema>) {
     if (editingProduct) {
       // Edit existing product
       const updatedProductData: Product = {
@@ -119,7 +123,7 @@ export function ProductClient() {
         ...values,
         imageUrl: values.imageUrl || editingProduct.imageUrl
       };
-      updateProduct(updatedProductData);
+      await updateProduct(updatedProductData);
     } else {
       // Add new product
       const newProductData = {
@@ -127,9 +131,10 @@ export function ProductClient() {
         imageUrl: values.imageUrl || `https://picsum.photos/seed/${values.name}/200/200`,
         imageHint: 'novo item',
       };
-      addProduct(newProductData);
+      await addProduct(newProductData);
     }
-    setProducts(getProducts()); // Refresh the list
+    const data = await getProducts();
+    setProducts(data);
     form.reset();
     setOpen(false);
     setEditingProduct(null);

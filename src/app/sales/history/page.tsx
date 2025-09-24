@@ -23,18 +23,17 @@ import { Badge } from '@/components/ui/badge';
 import Image from 'next/image';
 
 export default function SalesHistoryPage() {
-  const [sales, setSales] = useState<Sale[]>(getSales());
+  const [sales, setSales] = useState<Sale[]>([]);
 
   useEffect(() => {
-    const interval = setInterval(() => {
-      const currentSales = getSales();
-      setSales(prevSales => {
-        if (currentSales.length !== prevSales.length) {
-          return currentSales;
-        }
-        return prevSales;
-      });
-    }, 500); // Check every half a second
+    async function fetchSales() {
+        const data = await getSales();
+        setSales(data);
+    }
+    fetchSales();
+    
+    // Set up an interval to refresh data, useful for multi-tab scenarios
+    const interval = setInterval(fetchSales, 5000); // refresh every 5 seconds
 
     return () => clearInterval(interval);
   }, []);
@@ -72,7 +71,7 @@ export default function SalesHistoryPage() {
 }
 
 function SalesList({ sales }: { sales: Sale[] }) {
-  const sortedSales = [...sales].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+  // Sales are already sorted by date from the backend query
   
   return (
     <Card>
@@ -90,8 +89,8 @@ function SalesList({ sales }: { sales: Sale[] }) {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {sortedSales.length > 0 ? (
-                sortedSales.map((sale) => (
+            {sales.length > 0 ? (
+                sales.map((sale) => (
                   <TableRow key={sale.id}>
                     <TableCell>
                       <div className="font-medium">Venda #{sale.id.slice(-4)}</div>

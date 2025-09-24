@@ -45,33 +45,24 @@ export default function NewSalePage() {
   const barcodeInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    // Load products and combos on component mount
-    setProducts(getProducts());
-    setCombos(getCombos());
+    async function fetchData() {
+        const [productData, comboData] = await Promise.all([getProducts(), getCombos()]);
+
+        // Hydrate combos with full product details
+        const hydratedCombos = comboData.map(combo => {
+            const comboProducts = (combo.productIds || []).map(id => productData.find(p => p.id === id)).filter(Boolean) as Product[];
+            return { ...combo, products: comboProducts };
+        });
+
+        setProducts(productData);
+        setCombos(hydratedCombos);
+    }
+    fetchData();
 
     // Focus barcode input on page load
     barcodeInputRef.current?.focus();
 
-    // Periodically check for updates to products, in case they are edited in another tab
-    const interval = setInterval(() => {
-        const updatedProducts = getProducts();
-        setProducts(currentProducts => {
-            if (JSON.stringify(updatedProducts) !== JSON.stringify(currentProducts)) {
-                return updatedProducts;
-            }
-            return currentProducts;
-        });
-
-        const updatedCombos = getCombos();
-        setCombos(currentCombos => {
-           if (JSON.stringify(updatedCombos) !== JSON.stringify(currentCombos)) {
-            return updatedCombos;
-           }
-           return currentCombos;
-        });
-    }, 1000); // Check every second
-
-    return () => clearInterval(interval);
+    // No need for interval with Firestore, but could add real-time listener later
   }, []);
 
   const handleAddToCart = (item: Product | Combo) => {
@@ -122,7 +113,7 @@ export default function NewSalePage() {
 
   const cartTotal = cart.reduce((total, item) => total + item.product.price * item.quantity, 0);
 
-  const handleFinalizeSale = () => {
+  const handleFinalizeSale = async () => {
     if (cart.length === 0) {
       toast({
         variant: 'destructive',
@@ -132,7 +123,7 @@ export default function NewSalePage() {
       return;
     }
 
-    addSale({
+    await addSale({
       items: cart,
       total: cartTotal,
       paymentMethod,
@@ -142,6 +133,10 @@ export default function NewSalePage() {
       title: 'Venda Finalizada com Sucesso!',
       description: `Total: ${cartTotal.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}`,
     });
+
+    // Re-fetch products to get updated stock
+    const productData = await getProducts();
+    setProducts(productData);
 
     setCart([]);
     setCheckoutOpen(false);

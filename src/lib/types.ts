@@ -20,6 +20,7 @@ export type Combo = {
   id: string;
   name: string;
   products: Product[];
+  productIds?: string[]; // Used for storing in Firestore
   price: number;
   imageUrl: string;
   imageHint: string;
@@ -40,7 +41,7 @@ export type SaleItem = {
 
 export type Sale = {
   id: string;
-  date: string;
+  date: string; // Stored as ISO string
   items: SaleItem[];
   total: number;
   paymentMethod: PaymentMethod;
@@ -48,7 +49,7 @@ export type Sale = {
 
 export type Expense = {
   id: string;
-  date: string;
+  date: string; // Stored as ISO string
   description: string;
   amount: number;
 };

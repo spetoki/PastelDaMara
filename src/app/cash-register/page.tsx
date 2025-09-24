@@ -12,7 +12,7 @@ import {
 import { Separator } from '@/components/ui/separator';
 import type { CashRegisterSummary, Expense } from '@/lib/types';
 import { Briefcase, PlusCircle, MinusCircle, Trash2 } from 'lucide-react';
-import { getSales, getExpenses, addExpense } from '@/lib/data';
+import { getCashRegisterSummary, getExpenses, addExpense } from '@/lib/data';
 import {
   Form,
   FormControl,
@@ -40,45 +40,25 @@ const expenseSchema = z.object({
   amount: z.coerce.number().positive('Valor deve ser positivo'),
 });
 
-function loadCashRegisterFromStorage(): CashRegisterSummary {
-  if (typeof window === 'undefined') {
-    return { initial: 0, sales: 0, expenses: 0, withdrawals: 0, additions: 0 };
-  }
-  const saved = window.localStorage.getItem('cashRegister');
-  const initialValue = saved ? JSON.parse(saved) : { initial: 0, sales: 0, expenses: 0, withdrawals: 0, additions: 0 };
-  
-  // Recalculate sales and expenses from history
-  const sales = getSales();
-  initialValue.sales = sales.reduce((acc, sale) => acc + sale.total, 0);
-
-  const expenses = getExpenses();
-  initialValue.expenses = expenses.reduce((acc, exp) => acc + exp.amount, 0);
-  
-  return initialValue;
-}
 
 export default function CashRegisterPage() {
-  const [summary, setSummary] = useState<CashRegisterSummary>(loadCashRegisterFromStorage());
+  const [summary, setSummary] = useState<CashRegisterSummary | null>(null);
   const [expenses, setExpenses] = useState<Expense[]>([]);
 
+  async function refreshData() {
+      const [summaryData, expensesData] = await Promise.all([
+          getCashRegisterSummary(),
+          getExpenses()
+      ]);
+      setSummary(summaryData);
+      setExpenses(expensesData);
+  }
+
   useEffect(() => {
-    const refreshData = () => {
-      setSummary(loadCashRegisterFromStorage());
-      setExpenses(getExpenses());
-    }
     refreshData();
-
-    const interval = setInterval(() => {
-      refreshData();
-    }, 1000); // Check for updates every second
-
-    window.addEventListener('storage', refreshData);
-
-
-    return () => {
-      clearInterval(interval)
-      window.removeEventListener('storage', refreshData);
-    };
+    // Optional: set an interval to auto-refresh
+    const interval = setInterval(refreshData, 5000); // every 5 seconds
+    return () => clearInterval(interval);
   }, []);
 
   const expenseForm = useForm<z.infer<typeof expenseSchema>>({
@@ -86,11 +66,14 @@ export default function CashRegisterPage() {
     defaultValues: { description: '', amount: 0 },
   });
 
-  function onExpenseSubmit(values: z.infer<typeof expenseSchema>) {
-    addExpense(values);
+  async function onExpenseSubmit(values: z.infer<typeof expenseSchema>) {
+    await addExpense(values);
     expenseForm.reset();
-    setSummary(loadCashRegisterFromStorage());
-    setExpenses(getExpenses());
+    refreshData();
+  }
+  
+  if (!summary) {
+    return <div>Carregando...</div>; // Or a skeleton loader
   }
 
   const profit = summary.sales - summary.expenses;

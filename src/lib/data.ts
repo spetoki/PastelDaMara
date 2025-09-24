@@ -1,195 +1,181 @@
-
 'use client';
 
 import type { Product, Sale, CashRegisterSummary, Combo, Expense } from './types';
-import { PlaceHolderImages } from './placeholder-images';
+import { db } from './firebase';
+import {
+  collection,
+  doc,
+  addDoc,
+  getDocs,
+  updateDoc,
+  writeBatch,
+  query,
+  orderBy,
+  limit,
+  Timestamp,
+  getDoc,
+} from 'firebase/firestore';
 
-const pastelCarne = PlaceHolderImages.find(p => p.id === 'pastel-carne');
-const pastelQueijo = PlaceHolderImages.find(p => p.id === 'pastel-queijo');
-const cocaCola = PlaceHolderImages.find(p => p.id === 'coca-cola');
+// --- Collection References ---
+const productsCollection = collection(db, 'products');
+const combosCollection = collection(db, 'combos');
+const salesCollection = collection(db, 'sales');
+const expensesCollection = collection(db, 'expenses');
+const cashRegisterDoc = doc(db, 'appState', 'cashRegister');
 
-const initialProducts: Product[] = [
-    {
-        id: '1',
-        name: 'Pastel de Carne',
-        category: 'Pastéis',
-        price: 8.5,
-        cost: 3.0,
-        stock: 50,
-        stockUnit: 'un',
-        minStock: 10,
-        imageUrl: pastelCarne?.imageUrl || '',
-        imageHint: pastelCarne?.imageHint || 'food pastel'
-    },
-    {
-        id: '2',
-        name: 'Pastel de Queijo',
-        category: 'Pastéis',
-        price: 8.0,
-        cost: 2.8,
-        stock: 40,
-        stockUnit: 'un',
-        minStock: 10,
-        imageUrl: pastelQueijo?.imageUrl || '',
-        imageHint: pastelQueijo?.imageHint || 'cheese pastel'
-    },
-    {
-        id: '3',
-        name: 'Coca-Cola Lata',
-        category: 'Bebidas',
-        price: 5.0,
-        cost: 2.2,
-        stock: 100,
-        stockUnit: 'un',
-        minStock: 24,
-        imageUrl: cocaCola?.imageUrl || '',
-        imageHint: cocaCola?.imageHint || 'soda can'
-    }
-];
 
-// --- LocalStorage Logic ---
-function loadFromStorage<T>(key: string, defaultValue: T): T {
-  if (typeof window === 'undefined') {
-    return defaultValue;
-  }
-  try {
-    const item = window.localStorage.getItem(key);
-    return item ? JSON.parse(item) : defaultValue;
-  } catch (error) {
-    console.warn(`Error reading localStorage key “${key}”:`, error);
-    return defaultValue;
-  }
-}
-
-function saveToStorage<T>(key: string, value: T): void {
-  if (typeof window === 'undefined') {
-    console.warn('Cannot save to localStorage: window is not defined.');
-    return;
-  }
-  try {
-    const serializedValue = JSON.stringify(value);
-    window.localStorage.setItem(key, serializedValue);
-    // Dispatch a storage event to notify other tabs/windows
-    window.dispatchEvent(new StorageEvent('storage', {
-      key: key,
-      newValue: serializedValue,
-    }));
-  } catch (error) {
-    console.warn(`Error writing to localStorage key “${key}”:`, error);
-  }
+// --- Helper to convert Firestore docs to objects ---
+function docToItem<T>(doc: any): T {
+    const data = doc.data();
+    return {
+        ...data,
+        id: doc.id,
+        // Convert Timestamps to ISO strings
+        ...(data.date && { date: data.date.toDate().toISOString() }),
+    };
 }
 
 
-// Initialize data from localStorage or with initial values
-let mockProducts: Product[] = loadFromStorage('products', initialProducts);
-let mockCombos: Combo[] = loadFromStorage('combos', []);
-let mockSales: Sale[] = loadFromStorage('sales', []);
-let mockExpenses: Expense[] = loadFromStorage('expenses', []);
-let mockCashRegister: CashRegisterSummary = loadFromStorage('cashRegister', {
-  initial: 0.0,
-  sales: 0.0,
-  expenses: 0.0,
-  withdrawals: 0.0,
-  additions: 0.0,
-});
-
-// Funções para manipular os dados mockados
-export function addSale(sale: Omit<Sale, 'id' | 'date'>) {
-  const currentSales = getSales();
-  const newSale: Sale = {
-    ...sale,
-    id: (currentSales.length + 1).toString(),
-    date: new Date().toISOString(),
-  };
-
-  // Decrement stock for each item sold
-  let currentProducts = getProducts();
-  newSale.items.forEach(item => {
-    const productsToUpdate = 'products' in item.product ? item.product.products : [item.product];
-    productsToUpdate.forEach(p => {
-       const productIndex = currentProducts.findIndex(mp => mp.id === p.id);
-        if (productIndex !== -1) {
-          // This logic might be too simple for real-world scenarios (e.g., ingredients)
-          // but for now, we decrement the unit stock.
-          if(currentProducts[productIndex].stock > 0) {
-            currentProducts[productIndex].stock -= item.quantity;
-          }
-        }
-    });
-  });
-  saveToStorage('products', currentProducts);
-
-  const updatedSales = [newSale, ...currentSales];
-  saveToStorage('sales', updatedSales);
-  
-  const cashRegister = loadFromStorage('cashRegister', mockCashRegister);
-  cashRegister.sales += newSale.total;
-  saveToStorage('cashRegister', cashRegister);
-
-  return newSale;
+// --- Product Functions ---
+export async function getProducts(): Promise<Product[]> {
+  const snapshot = await getDocs(productsCollection);
+  return snapshot.docs.map(d => docToItem<Product>(d));
 }
 
-
-export function getProducts() {
-  return loadFromStorage('products', initialProducts);
+export async function addProduct(product: Omit<Product, 'id'>) {
+  const docRef = await addDoc(productsCollection, product);
+  return { ...product, id: docRef.id };
 }
 
-export function getSales() {
-  return loadFromStorage('sales', []);
-}
-
-export function addProduct(product: Omit<Product, 'id'>) {
-  const products = getProducts();
-  const newProduct: Product = {
-    ...product,
-    id: (products.length > 0 ? Math.max(...products.map(p => parseInt(p.id, 10))) + 1 : 1).toString(),
-  };
-  const updatedProducts = [newProduct, ...products];
-  saveToStorage('products', updatedProducts);
-  return newProduct;
-}
-
-export function updateProduct(updatedProduct: Product) {
-  const products = getProducts();
-  const updatedProducts = products.map((p) =>
-    p.id === updatedProduct.id ? updatedProduct : p
-  );
-  saveToStorage('products', updatedProducts);
+export async function updateProduct(updatedProduct: Product) {
+  const { id, ...data } = updatedProduct;
+  const docRef = doc(db, 'products', id);
+  await updateDoc(docRef, data);
   return updatedProduct;
 }
 
-export function getCombos() {
-  return loadFromStorage('combos', []);
+// --- Combo Functions ---
+export async function getCombos(): Promise<Combo[]> {
+    const snapshot = await getDocs(combosCollection);
+    return snapshot.docs.map(d => docToItem<Combo>(d));
 }
 
-export function addCombo(combo: Omit<Combo, 'id'>) {
-  const combos = getCombos();
-  const newCombo: Combo = {
-    ...combo,
-    id: `combo-${combos.length + 1}`,
-  };
-  const updatedCombos = [newCombo, ...combos];
-  saveToStorage('combos', updatedCombos);
-  return newCombo;
-}
-
-export function getExpenses() {
-  return loadFromStorage('expenses', []);
-}
-
-export function addExpense(expense: Omit<Expense, 'id' | 'date'>) {
-    const currentExpenses = getExpenses();
-    const newExpense: Expense = {
-        ...expense,
-        id: `exp-${currentExpenses.length + 1}`,
-        date: new Date().toISOString(),
+export async function addCombo(combo: Omit<Combo, 'id'>) {
+    // Firestore can't store nested objects with methods, so we store product IDs
+    const comboData = {
+      ...combo,
+      productIds: combo.products.map(p => p.id),
+      products: undefined, // Remove the full product objects before saving
     };
-    const updatedExpenses = [newExpense, ...currentExpenses];
-    saveToStorage('expenses', updatedExpenses);
+    delete comboData.products;
 
-    const cashRegister = loadFromStorage('cashRegister', mockCashRegister);
-    cashRegister.expenses += newExpense.amount;
-    saveToStorage('cashRegister', cashRegister);
+    const docRef = await addDoc(combosCollection, comboData);
+
+    // For returning, we still want the full product objects for the UI
+    return { ...combo, id: docRef.id };
+}
+
+
+// --- Sale Functions ---
+export async function getSales(): Promise<Sale[]> {
+  const q = query(salesCollection, orderBy('date', 'desc'), limit(100));
+  const snapshot = await getDocs(q);
+  // This is more complex now because we need to fetch product details for each sale item.
+  // For simplicity, we're returning what's stored. A real app would resolve these.
+  const sales = snapshot.docs.map(d => docToItem<Sale>(d));
+  return sales;
+}
+
+export async function addSale(sale: Omit<Sale, 'id' | 'date'>) {
+  const batch = writeBatch(db);
+
+  // Create the sale document
+  const newSale: Omit<Sale, 'id'> = {
+    ...sale,
+    date: Timestamp.now().toDate().toISOString(),
+  };
+  const saleRef = doc(collection(db, 'sales'));
+  batch.set(saleRef, newSale);
+
+  // Decrement stock for each item sold
+  for (const item of sale.items) {
+    const productsToUpdate = 'products' in item.product ? item.product.products : [item.product];
+    for (const p of productsToUpdate) {
+      if (p.stock !== undefined) {
+         const productRef = doc(db, 'products', p.id);
+         const newStock = p.stock - item.quantity;
+         batch.update(productRef, { stock: newStock < 0 ? 0 : newStock });
+      }
+    }
+  }
+
+  // Update cash register
+  const cashRegister = await getCashRegisterSummary();
+  const registerRef = doc(db, 'appState', 'cashRegister');
+  batch.update(registerRef, { sales: cashRegister.sales + sale.total });
+
+
+  await batch.commit();
+
+  return { ...newSale, id: saleRef.id };
+}
+
+// --- Expense Functions ---
+export async function getExpenses(): Promise<Expense[]> {
+    const q = query(expensesCollection, orderBy('date', 'desc'), limit(100));
+    const snapshot = await getDocs(q);
+    return snapshot.docs.map(d => docToItem<Expense>(d));
+}
+
+export async function addExpense(expense: Omit<Expense, 'id' | 'date'>) {
+    const batch = writeBatch(db);
     
-    return newExpense;
+    // Add expense doc
+    const newExpense = { ...expense, date: Timestamp.now() };
+    const expenseRef = doc(collection(db, 'expenses'));
+    batch.set(expenseRef, newExpense);
+
+    // Update cash register
+    const cashRegister = await getCashRegisterSummary();
+    const registerRef = doc(db, 'appState', 'cashRegister');
+    batch.update(registerRef, { expenses: cashRegister.expenses + expense.amount });
+
+    await batch.commit();
+    return { ...expense, id: expenseRef.id, date: newExpense.date.toDate().toISOString() };
+}
+
+// --- Cash Register Functions ---
+export async function getCashRegisterSummary(): Promise<CashRegisterSummary> {
+    const docSnap = await getDoc(cashRegisterDoc);
+    if (docSnap.exists()) {
+        return docSnap.data() as CashRegisterSummary;
+    } else {
+        // If it doesn't exist, create it.
+        const initialSummary: CashRegisterSummary = {
+            initial: 0,
+            sales: 0,
+            expenses: 0,
+            withdrawals: 0,
+            additions: 0,
+        };
+        await addDoc(collection(db, 'appState'), initialSummary);
+        return initialSummary;
+    }
+}
+
+// --- Dashboard Message Functions ---
+export async function getDashboardMessage(): Promise<string> {
+    const docRef = doc(db, 'appState', 'dashboardMessage');
+    const docSnap = await getDoc(docRef);
+    if (docSnap.exists() && docSnap.data().message) {
+        return docSnap.data().message;
+    }
+    return '';
+}
+
+export async function saveDashboardMessage(message: string): Promise<void> {
+    const docRef = doc(db, 'appState', 'dashboardMessage');
+    await updateDoc(docRef, { message }).catch(async () => {
+         await addDoc(collection(db, 'appState'), {message});
+    });
 }

@@ -23,7 +23,11 @@ export function StockManager() {
   const [products, setProducts] = useState<Product[]>([]);
 
   useEffect(() => {
-    setProducts(getProducts());
+    async function fetchProducts() {
+        const data = await getProducts();
+        setProducts(data);
+    }
+    fetchProducts();
   }, []);
 
   return (

@@ -57,8 +57,19 @@ export function PromotionsClient() {
   const [open, setOpen] = useState(false);
   
   useEffect(() => {
-    setCombos(getCombos());
-    setProducts(getProducts());
+    async function fetchData() {
+      const [comboData, productData] = await Promise.all([getCombos(), getProducts()]);
+      
+      // Since Firestore doesn't store the full product, we need to re-hydrate it.
+      const hydratedCombos = comboData.map(combo => {
+        const comboProducts = (combo.productIds || []).map(id => productData.find(p => p.id === id)).filter(Boolean) as Product[];
+        return { ...combo, products: comboProducts };
+      });
+
+      setCombos(hydratedCombos);
+      setProducts(productData);
+    }
+    fetchData();
   }, []);
 
   const form = useForm<z.infer<typeof comboSchema>>({
@@ -75,10 +86,10 @@ export function PromotionsClient() {
     setOpen(true);
   }
 
-  function onSubmit(values: z.infer<typeof comboSchema>) {
+  async function onSubmit(values: z.infer<typeof comboSchema>) {
     const selectedProducts = products.filter(p => values.productIds.includes(p.id));
     
-    addCombo({
+    await addCombo({
       name: values.name,
       price: values.price,
       products: selectedProducts,
@@ -86,7 +97,13 @@ export function PromotionsClient() {
       imageHint: 'combo offer',
     });
 
-    setCombos(getCombos()); // Refresh the list
+    const comboData = await getCombos();
+    const productData = products; // no need to refetch
+     const hydratedCombos = comboData.map(combo => {
+        const comboProducts = (combo.productIds || []).map(id => productData.find(p => p.id === id)).filter(Boolean) as Product[];
+        return { ...combo, products: comboProducts };
+      });
+    setCombos(hydratedCombos);
     form.reset();
     setOpen(false);
   }

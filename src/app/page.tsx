@@ -22,6 +22,7 @@ import {
   TrendingDown,
 } from 'lucide-react';
 import Link from 'next/link';
+import { getDashboardMessage, saveDashboardMessage } from '@/lib/data';
 
 export default function Home() {
   const [message, setMessage] = useState('');
@@ -29,14 +30,17 @@ export default function Home() {
   const { toast } = useToast();
 
   useEffect(() => {
-    // Load the message from localStorage on component mount
-    const savedMessage = localStorage.getItem('dashboardMessage') || '';
-    setMessage(savedMessage);
-    setNewMessage(savedMessage);
+    // Load the message from Firestore on component mount
+    const fetchMessage = async () => {
+      const savedMessage = await getDashboardMessage();
+      setMessage(savedMessage);
+      setNewMessage(savedMessage);
+    };
+    fetchMessage();
   }, []);
 
-  const handleSaveMessage = () => {
-    localStorage.setItem('dashboardMessage', newMessage);
+  const handleSaveMessage = async () => {
+    await saveDashboardMessage(newMessage);
     setMessage(newMessage);
     toast({
       title: 'Aviso salvo!',
