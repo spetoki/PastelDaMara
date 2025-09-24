@@ -1,15 +1,22 @@
+'use client';
+
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import {
   Card,
   CardContent,
   CardDescription,
+  CardFooter,
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
+import { Textarea } from '@/components/ui/textarea';
+import { useToast } from '@/hooks/use-toast';
 import {
   Banknote,
   Boxes,
   DollarSign,
+  MessageSquare,
   PackagePlus,
   ShoppingCart,
   TrendingDown,
@@ -17,6 +24,26 @@ import {
 import Link from 'next/link';
 
 export default function Home() {
+  const [message, setMessage] = useState('');
+  const [newMessage, setNewMessage] = useState('');
+  const { toast } = useToast();
+
+  useEffect(() => {
+    // Load the message from localStorage on component mount
+    const savedMessage = localStorage.getItem('dashboardMessage') || '';
+    setMessage(savedMessage);
+    setNewMessage(savedMessage);
+  }, []);
+
+  const handleSaveMessage = () => {
+    localStorage.setItem('dashboardMessage', newMessage);
+    setMessage(newMessage);
+    toast({
+      title: 'Aviso salvo!',
+      description: 'O novo aviso está visível para todos os usuários.',
+    });
+  };
+
   return (
     <div className="flex flex-col gap-8">
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
@@ -71,6 +98,33 @@ export default function Home() {
           </CardContent>
         </Card>
       </div>
+
+       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <Card className="lg:col-span-1">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <MessageSquare className="h-5 w-5" />
+                Mural de Avisos
+              </CardTitle>
+               <CardDescription>Deixe uma mensagem para a equipe.</CardDescription>
+            </CardHeader>
+            <CardContent>
+                <div className="p-4 mb-4 bg-muted/50 rounded-lg min-h-[60px]">
+                    <p className="text-sm text-foreground">{message || 'Nenhum aviso no momento.'}</p>
+                </div>
+               <Textarea
+                placeholder="Escreva um novo aviso aqui..."
+                value={newMessage}
+                onChange={(e) => setNewMessage(e.target.value)}
+                className="mb-4"
+                />
+            </CardContent>
+             <CardFooter>
+                <Button onClick={handleSaveMessage}>Salvar Aviso</Button>
+            </CardFooter>
+          </Card>
+        </div>
+
 
       <div>
         <h2 className="text-2xl font-bold tracking-tight mb-4">Acesso Rápido</h2>
