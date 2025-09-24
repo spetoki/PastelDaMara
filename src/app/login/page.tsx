@@ -41,8 +41,8 @@ export default function LoginPage() {
           title: 'Login bem-sucedido!',
           description: 'Você será redirecionado em breve.',
         });
-        // router.push('/'); // This is removed.
-        router.refresh(); // This will re-trigger the middleware and layout check.
+        // Force a full page reload to ensure layout re-renders correctly with the new cookie.
+        window.location.href = '/';
       } else {
         toast({
           variant: 'destructive',
