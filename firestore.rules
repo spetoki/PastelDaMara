@@ -1,10 +1,10 @@
+
 rules_version = '2';
 
 service cloud.firestore {
   match /databases/{database}/documents {
-    // ATENÇÃO: Regra insegura. Permite acesso público total.
-    // Ideal para desenvolvimento, mas precisa ser alterada com autenticação
-    // para um ambiente de produção.
+    // Allow public read and write access for development purposes.
+    // WARNING: This is insecure for production.
     match /{document=**} {
       allow read, write: if true;
     }
