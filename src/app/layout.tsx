@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import './globals.css';
 import { AppShell } from '@/components/AppShell';
 import { Toaster } from '@/components/ui/toaster';
+import { cookies } from 'next/headers';
 
 export const metadata: Metadata = {
   title: 'PastelPro',
@@ -13,6 +14,8 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const isLoggedIn = cookies().has('auth-token');
+
   return (
     <html lang="en" className="dark">
       <head>
@@ -24,7 +27,7 @@ export default function RootLayout({
         />
       </head>
       <body className="font-body antialiased">
-        <AppShell>{children}</AppShell>
+        {isLoggedIn ? <AppShell>{children}</AppShell> : children}
         <Toaster />
       </body>
     </html>
