@@ -13,7 +13,6 @@ export type Product = {
   minStock: number;
   imageUrl: string;
   imageHint: string;
-  barcode?: string;
 };
 
 export type Combo = {

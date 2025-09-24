@@ -33,7 +33,6 @@ const seedDatabaseFlow = ai.defineFlow(
         minStock: 10,
         imageUrl: 'https://images.unsplash.com/photo-1747932987138-aed6073021db?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw1fHxmb29kJTIwcGFzdGVsfGVufDB8fHx8MTc1ODY2MTQ1MHww&ixlib=rb-4.1.0&q=80&w=1080',
         imageHint: 'food pastel',
-        barcode: '7890000000011',
       },
       {
         name: 'Coca-Cola Lata',
@@ -45,7 +44,6 @@ const seedDatabaseFlow = ai.defineFlow(
         minStock: 20,
         imageUrl: 'https://images.unsplash.com/photo-1603569239784-0a4b159fa3dc?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw4fHxzb2RhJTIwY2FufGVufDB8fHx8MTc1ODU4ODQ3OXww&ixlib=rb-4.1.0&q=80&w=1080',
         imageHint: 'soda can',
-        barcode: '7890000000022',
       },
       {
         name: 'Pastel de Queijo',
@@ -57,7 +55,6 @@ const seedDatabaseFlow = ai.defineFlow(
         minStock: 10,
         imageUrl: 'https://images.unsplash.com/photo-1685708683548-f82156a40056?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwxfHxjaGVlc2UlMjBwYXN0ZWx8ZW58MHx8fHwxNzU4NjYxNDUwfDA&ixlib=rb-4.1.0&q=80&w=1080',
         imageHint: 'cheese pastel',
-        barcode: '7890000000033',
       },
     ];
 

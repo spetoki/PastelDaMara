@@ -42,7 +42,7 @@ import { getProducts, addProduct, updateProduct } from '@/lib/data';
 import type { Product } from '@/lib/types';
 import { Badge } from '@/components/ui/badge';
 import Image from 'next/image';
-import { PlusCircle, MoreHorizontal, Upload, Barcode, Database } from 'lucide-react';
+import { PlusCircle, MoreHorizontal, Upload, Database } from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -63,7 +63,6 @@ const productSchema = z.object({
   stockUnit: z.enum(['g', 'un']),
   minStock: z.coerce.number().int().min(0, 'Estoque mínimo não pode ser negativo'),
   imageUrl: z.string().optional().or(z.literal('')),
-  barcode: z.string().optional().or(z.literal('')),
 });
 
 export function ProductClient() {
@@ -95,7 +94,6 @@ export function ProductClient() {
       stockUnit: 'un',
       minStock: 0,
       imageUrl: '',
-      barcode: '',
     },
   });
   
@@ -126,7 +124,6 @@ export function ProductClient() {
         stockUnit: 'un',
         minStock: 0,
         imageUrl: '',
-        barcode: '',
       });
     }
     setOpen(true);
@@ -263,22 +260,6 @@ export function ProductClient() {
                     </FormItem>
                   )}
                 />
-                 <FormField
-                    control={form.control}
-                    name="barcode"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Código de Barras</FormLabel>
-                        <FormControl>
-                           <div className="relative">
-                             <Barcode className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                             <Input placeholder="Ex: 7891234567890" {...field} className="pl-10" />
-                          </div>
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
                 <FormField
                   control={form.control}
                   name="category"
