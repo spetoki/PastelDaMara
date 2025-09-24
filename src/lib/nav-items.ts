@@ -1,13 +1,6 @@
 import {
   Home,
-  ShoppingBasket,
-  LineChart,
-  Boxes,
-  Banknote,
   type LucideIcon,
-  ShoppingCart,
-  Gift,
-  MessageSquare,
 } from 'lucide-react';
 
 export type NavItem = {
@@ -22,39 +15,4 @@ export const navItems: NavItem[] = [
     label: 'Início',
     icon: Home,
   },
-  {
-    href: '/sales/new',
-    label: 'Nova Venda',
-    icon: ShoppingCart,
-  },
-  {
-    href: '/products',
-    label: 'Produtos',
-    icon: ShoppingBasket,
-  },
-  {
-    href: '/promotions',
-    label: 'Promoções',
-    icon: Gift,
-  },
-  {
-    href: '/sales/history',
-    label: 'Vendas',
-    icon: LineChart,
-  },
-  {
-    href: '/stock',
-    label: 'Estoque',
-    icon: Boxes,
-  },
-  {
-    href: '/cash-register',
-    label: 'Caixa',
-    icon: Banknote,
-  },
-  {
-    href: '/rafael',
-    label: 'Rafael clik aqui',
-    icon: MessageSquare,
-  }
 ];
