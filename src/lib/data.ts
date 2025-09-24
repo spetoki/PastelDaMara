@@ -44,8 +44,7 @@ export async function getProducts(): Promise<Product[]> {
 }
 
 export async function addProduct(product: Omit<Product, 'id'>) {
-  const docRef = doc(collection(db, 'products')); // Create a reference with a new ID
-  await setDoc(docRef, product); // Use setDoc to create the document
+  const docRef = await addDoc(productsCollection, product);
   return { ...product, id: docRef.id };
 }
 
