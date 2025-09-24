@@ -41,8 +41,8 @@ export default function LoginPage() {
           title: 'Login bem-sucedido!',
           description: 'Você será redirecionado em breve.',
         });
-        router.push('/');
-        router.refresh();
+        // router.push('/'); // This is removed.
+        router.refresh(); // This will re-trigger the middleware and layout check.
       } else {
         toast({
           variant: 'destructive',
